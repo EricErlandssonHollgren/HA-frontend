@@ -92,7 +92,7 @@ export class HATemplateCalendar extends LitElement {
     "listWeek",
   ];
 
-  @property() public initialView: FullCalendarView = "dayGridMonth";
+  @property() public initialView: FullCalendarView = "dayGridWeek";
 
   @property() public eventDisplay = "auto";
 
@@ -209,7 +209,6 @@ export class HATemplateCalendar extends LitElement {
             </div>
           `
         : ""}
-
       <div id="calendar"></div>
       ${this._hasMutableCalendars
         ? html`<ha-fab
@@ -529,11 +528,12 @@ export class HATemplateCalendar extends LitElement {
             --ha-card-background,
             var(--card-background-color, white)
           );
-          height: var(--calendar-height);
+          /* height: var(--calendar-height);
           --fc-neutral-bg-color: var(
             --ha-card-background,
             var(--card-background-color, white)
-          );
+          ); */
+          height: 600px;
           --fc-list-event-hover-bg-color: var(
             --ha-card-background,
             var(--card-background-color, white)
