@@ -14,7 +14,6 @@ import type { CalendarViewChanged, HomeAssistant } from "../../types";
 import "../lovelace/components/hui-generic-entity-row";
 import { createCloseHeading } from "../../components/ha-dialog";
 import "./ha-template-calendar";
-import type { CalendarEventMutableParams } from "../../data/calendar";
 
 class DialogCalendarTemplateCreate extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
@@ -22,10 +21,8 @@ class DialogCalendarTemplateCreate extends LitElement {
   @state() private _params?: CalendarTemplateCreateDialogParams;
 
   // @state() private _calendarId?: string;
-  //  private _timeIntervals: { [day: string]: { interval: string; summary: string }[] } = {};
 
- private _timeIntervals: Record<string, CalendarEventMutableParams[]> = {};
-
+  @state() private _timeIntervals: Array<{ day: string; interval: string }> = [];
 
   public async showDialog(
     params: CalendarTemplateCreateDialogParams
@@ -39,30 +36,31 @@ class DialogCalendarTemplateCreate extends LitElement {
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
 
-  private _logState(): void {
+  private _logState():void {
     console.log("Current Time Intervals State:", this._timeIntervals);
   }
   
-  private _addTimeInterval(day: string, interval: string, summary: string): void {
-    const [startTime, endTime] = interval.split("-");
-    const date = this._getDateFromDay(day); // Convert day to date string
+  private _addTimeInterval(event: Event) {
+    const button = event.target as HTMLElement;
+    const day = button.dataset.day as string; // Get the day (e.g., "mon", "tue")
   
-    const event: CalendarEventMutableParams = {
-      summary,
-      dtstart: `${date}T${startTime}:00`, // e.g., "2024-11-20T14:00:00"
-      dtend: `${date}T${endTime}:00`, // e.g., "2024-11-20T15:00:00"
-    };
+    // Prompt the user for a time interval
+    const timeInterval = window.prompt(
+      `Enter a time interval for ${day.toUpperCase()} (e.g., 14:00-15:00):`
+    );
   
-    if (!this._timeIntervals[day]) {
-      this._timeIntervals[day] = [];
+    // Validate the input
+    if (timeInterval && /^[0-9]{2}:[0-9]{2}-[0-9]{2}:[0-9]{2}$/.test(timeInterval)) {
+      // Save the day and interval to the state
+      this._timeIntervals = [
+        ...this._timeIntervals,
+        { day, interval: timeInterval },
+      ];
+    } else if (timeInterval) {
+      // Alert if the format is invalid
+      window.alert("Invalid time format. Please use HH:MM-HH:MM.");
     }
-  
-    this._timeIntervals[day].push(event);
-    this.requestUpdate(); // Trigger UI update
-    this._logState(); // Optionally log the state
-  }
-  
-  
+  }  
 
   
 
@@ -97,23 +95,33 @@ class DialogCalendarTemplateCreate extends LitElement {
             </tr>
           </thead>
           <tbody>
-  <tr>
-    ${["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(
-      (day) => html`
-        <td>
-          <button
-            class="calendar-button"
-            id="button-${day.toLowerCase()}"
-            @click=${() => this._addTimeInterval(day)}
-          >
-            ${this._timeIntervals[day]?.map(e => `${e.interval} (${e.summary})`).join(", ") || "Press me"}
-          </button>
-        </td>
-      `
-    )}
-  </tr>
-</tbody>
+            <tr>
+              ${["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((day) => {
+                // Find all intervals for this day
+                const dayIntervals = this._timeIntervals
+                  .filter((entry) => entry.day === day)
+                  .map((entry) => entry.interval);
 
+                return html`
+                  <td>
+                    ${dayIntervals.length > 0
+                      ? dayIntervals.map(
+                          (interval) => html`<span class="time-interval">${interval}</span><br />`
+                        )
+                      : html`
+                          <button
+                            class="calendar-button"
+                            data-day=${day}
+                            @click=${this._addTimeInterval}
+                          >
+                            Press me
+                          </button>
+                        `}
+                  </td>
+                `;
+              })}
+            </tr>
+          </tbody>
         </table>
       </div>
     `;
