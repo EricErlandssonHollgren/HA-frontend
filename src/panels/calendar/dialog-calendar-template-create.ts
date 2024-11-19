@@ -14,6 +14,7 @@ import type { CalendarViewChanged, HomeAssistant } from "../../types";
 import "../lovelace/components/hui-generic-entity-row";
 import { createCloseHeading } from "../../components/ha-dialog";
 import "./ha-template-calendar";
+import type { CalendarEventMutableParams } from "../../data/calendar";
 
 class DialogCalendarTemplateCreate extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
@@ -21,6 +22,10 @@ class DialogCalendarTemplateCreate extends LitElement {
   @state() private _params?: CalendarTemplateCreateDialogParams;
 
   // @state() private _calendarId?: string;
+  //  private _timeIntervals: { [day: string]: { interval: string; summary: string }[] } = {};
+
+ private _timeIntervals: Record<string, CalendarEventMutableParams[]> = {};
+
 
   public async showDialog(
     params: CalendarTemplateCreateDialogParams
@@ -33,6 +38,33 @@ class DialogCalendarTemplateCreate extends LitElement {
     this._params = undefined;
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
+
+  private _logState(): void {
+    console.log("Current Time Intervals State:", this._timeIntervals);
+  }
+  
+  private _addTimeInterval(day: string, interval: string, summary: string): void {
+    const [startTime, endTime] = interval.split("-");
+    const date = this._getDateFromDay(day); // Convert day to date string
+  
+    const event: CalendarEventMutableParams = {
+      summary,
+      dtstart: `${date}T${startTime}:00`, // e.g., "2024-11-20T14:00:00"
+      dtend: `${date}T${endTime}:00`, // e.g., "2024-11-20T15:00:00"
+    };
+  
+    if (!this._timeIntervals[day]) {
+      this._timeIntervals[day] = [];
+    }
+  
+    this._timeIntervals[day].push(event);
+    this.requestUpdate(); // Trigger UI update
+    this._logState(); // Optionally log the state
+  }
+  
+  
+
+  
 
   /* TODO:
    * Add list of already created templates (sidebar thing from design)
@@ -49,20 +81,41 @@ class DialogCalendarTemplateCreate extends LitElement {
         @closed=${this.closeDialog}
         scrimClickAction
         escapeKeyAction=${this.closeDialog}
-        .heading=${createCloseHeading(this.hass, "This is title")}
         style="--dialog-content-padding: 24px; width: 1000px; max-width: 90%;"
       >
-        This is text
-        <ha-template-calendar
-          .events=${this._params.events}
-          .calendars=${this._params.calendars}
-          .narrow=${false}
-          .initialView=${"dayGridWeek"}
-          .hass=${this.hass}
-          .error=${"error"}
-          @view-changed=${this._handleViewChanged}
-        ></ha-template-calendar>
-      </ha-dialog>
+      <div id="calendar-container">
+        <table class="custom-calendar">
+          <thead>
+            <tr>
+              <th>MON</th>
+              <th>TUE</th>
+              <th>WED</th>
+              <th>THU</th>
+              <th>FRI</th>
+              <th>SAT</th>
+              <th>SUN</th>
+            </tr>
+          </thead>
+          <tbody>
+  <tr>
+    ${["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(
+      (day) => html`
+        <td>
+          <button
+            class="calendar-button"
+            id="button-${day.toLowerCase()}"
+            @click=${() => this._addTimeInterval(day)}
+          >
+            ${this._timeIntervals[day]?.map(e => `${e.interval} (${e.summary})`).join(", ") || "Press me"}
+          </button>
+        </td>
+      `
+    )}
+  </tr>
+</tbody>
+
+        </table>
+      </div>
     `;
   }
 
@@ -77,161 +130,68 @@ class DialogCalendarTemplateCreate extends LitElement {
     return [
       haStyleDialog,
       css`
-        @media all and (min-width: 450px) and (min-height: 500px) {
-          ha-dialog {
-            --mdc-dialog-min-width: 1000px;
-            --mdc-dialog-max-width: 10000px;
-            --mdc-dialog-min-height: 1000px;
-          }
-        }
-        state-info {
-          line-height: 40px;
-        }
-        ha-svg-icon {
-          width: 40px;
-          margin-right: 8px;
-          margin-inline-end: 8px;
-          margin-inline-start: initial;
-          direction: var(--direction);
-          vertical-align: top;
-        }
-        .field {
+            #calendar-container {
+          width: 100%;
           display: flex;
-        }
-        .description {
-          color: var(--secondary-text-color);
-          max-width: 300px;
-          overflow-wrap: break-word;
-        }
-        .fc-theme-standard .fc-scrollgrid {
-          border: 1px solid var(--divider-color);
-          border-width: var(--calendar-border-width, 1px);
-          border-radius: var(
-            --calendar-border-radius,
-            var(--mdc-shape-small, 4px)
-          );
-        }
-
-        .fc-theme-standard td {
-          border-bottom-left-radius: var(--mdc-shape-small, 4px);
-          border-bottom-right-radius: var(--mdc-shape-small, 4px);
-        }
-
-        .fc-scrollgrid-section-header td {
-          border: none;
-        }
-
-        th.fc-col-header-cell.fc-day {
-          background-color: var(--table-header-background-color);
-          color: var(--primary-text-color);
-          font-size: 11px;
-          font-weight: bold;
-          text-transform: uppercase;
-        }
-
-        .fc-daygrid-dot-event:hover {
-          background-color: inherit;
-        }
-
-        .fc-daygrid-day-top {
-          text-align: center;
-          padding-top: 5px;
           justify-content: center;
         }
 
-        table.fc-scrollgrid-sync-table
-          tbody
-          tr:first-child
-          .fc-daygrid-day-top {
-          padding-top: 0;
-        }
-
-        a.fc-daygrid-day-number {
-          float: none !important;
-          font-size: 12px;
-          cursor: pointer;
-        }
-
-        .fc .fc-daygrid-day-number {
-          padding: 3px !important;
-        }
-
-        .fc .fc-daygrid-day.fc-day-today {
-          background: inherit;
-        }
-
-        td.fc-day-today .fc-daygrid-day-number {
-          height: 26px;
-          color: var(--text-primary-color) !important;
-          background-color: var(--primary-color);
-          border-radius: 50%;
-          display: inline-block;
+        .custom-calendar {
+          border-collapse: collapse;
+          width: 90%;
+          table-layout: fixed;
           text-align: center;
-          white-space: nowrap;
-          width: max-content;
-          min-width: 24px;
+          font-family: Arial, sans-serif;
         }
 
-        .fc-daygrid-day-events {
-          margin-top: 4px;
+        .custom-calendar th {
+          background-color: #f9f9f9;
+          color: #333;
+          font-size: 14px;
+          font-weight: bold;
+          border-bottom: 2px solid #ddd;
+          padding: 10px;
         }
 
-        .fc-event {
-          border-radius: 4px;
-          line-height: 1.7;
+        .custom-calendar td {
+          height: 100px;
+          border: 1px solid #ddd;
+          position: relative;
+        }
+
+        .event-dot {
+          width: 6px;
+          height: 6px;
+          background-color: red;
+          border-radius: 50%;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+
+        .calendar-button {
+          margin-top: 10px;
+          padding: 5px 10px;
+          font-size: 12px;
+          border: 1px solid #ccc;
+          background-color: #f0f0f0;
           cursor: pointer;
+          border-radius: 4px;
+          transition: background-color 0.2s ease;
         }
 
-        .fc-daygrid-block-event .fc-event-main {
-          padding: 0 1px;
+        .calendar-button:hover {
+          background-color: #ddd;
         }
 
-        .fc-day-past .fc-daygrid-day-events {
-          opacity: 0.5;
-        }
-
-        .fc-icon-x:before {
-          font-family: var(--paper-font-common-base_-_font-family);
-          content: "X";
-        }
-
-        .fc-popover {
-          background-color: var(--primary-background-color) !important;
-        }
-
-        .fc-popover-header {
-          background-color: var(--secondary-background-color) !important;
-        }
-
-        .fc-theme-standard .fc-list-day-frame {
-          background-color: transparent;
-        }
-
-        .fc-list.fc-view,
-        .fc-list-event.fc-event td {
-          border: none;
-        }
-
-        .fc-list-day.fc-day th {
-          border-bottom: none;
-          border-top: 1px solid var(--fc-theme-standard-border-color, #ddd) !important;
-        }
-
-        .fc-list-day-text {
-          font-size: 16px;
-          font-weight: 400;
-        }
-
-        .fc-list-day-side-text {
-          font-weight: 400;
-          font-size: 16px;
-          color: var(--primary-color);
-        }
-
-        .fc-list-table td,
-        .fc-list-day-frame {
-          padding-top: 12px;
-          padding-bottom: 12px;
+        .time-interval {
+          font-size: 14px;
+          font-weight: bold;
+          color: #333;
+          text-align: center;
+          display: block;
+          margin-top: 10px;
         }
       `,
     ];
