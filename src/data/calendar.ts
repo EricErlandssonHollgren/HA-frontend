@@ -41,6 +41,10 @@ export interface CalendarEventMutableParams {
   description?: string;
 }
 
+export interface CalendarTemplateEvents {
+  template_events: CalendarEventMutableParams[];
+}
+
 // The scope of a delete/update for a recurring event
 export enum RecurrenceRange {
   THISEVENT = "",
@@ -158,6 +162,17 @@ export const createCalendarEvent = (
     type: "calendar/event/create",
     entity_id: entityId,
     event: event,
+  });
+
+export const applyCalendarTemplate = (
+  hass: HomeAssistant,
+  entityId: string,
+  calendar_template: CalendarTemplateEvents
+) =>
+  hass.callWS<void>({
+    type: "calendar/template/apply",
+    entity_id: entityId,
+    calendar_template: calendar_template,
   });
 
 export const updateCalendarEvent = (
