@@ -40,6 +40,7 @@ import "../lovelace/components/hui-generic-entity-row";
 import "./ha-recurrence-rule-editor";
 import { showConfirmEventDialog } from "./show-confirm-event-dialog-box";
 import type { CalendarEventEditDialogParams } from "./show-dialog-calendar-event-editor";
+import { CalendarTemplateEventMutableParams } from "../../data/calendartemplate";
 
 const CALENDAR_DOMAINS = ["calendar"];
 
@@ -53,13 +54,14 @@ class DialogCalendarTemplateEventEditor extends LitElement {
 
   @state() private _params?: CalendarEventEditDialogParams;
 
-  @state() private _calendarId?: string;
-
   @state() private _summary = "";
 
-  @state() private _description? = "";
+  @state() private _description? = ""; 
 
-  @state() private _rrule?: string;
+  // @state() private _rrule?: string;
+  @state() private _starttime?: string;
+
+  @state() private _endtime?: string;
 
   @state() private _allDay = false;
 
@@ -79,54 +81,38 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     this._error = undefined;
     this._info = undefined;
     this._params = params;
-    this._calendarId =
-      params.calendarId ||
-      Object.values(this.hass.states).find(
-        (stateObj) =>
-          computeStateDomain(stateObj) === "calendar" &&
-          supportsFeature(stateObj, CalendarEntityFeature.CREATE_EVENT)
-      )?.entity_id;
+    // this._calendarId =
+    //   params.calendarId ||
+    //   Object.values(this.hass.states).find(
+    //     (stateObj) =>
+    //       computeStateDomain(stateObj) === "calendar" &&
+    //       supportsFeature(stateObj, CalendarEntityFeature.CREATE_EVENT)
+    //   )?.entity_id;
     this._timeZone = resolveTimeZone(
       this.hass.locale.time_zone,
       this.hass.config.time_zone
     );
-    if (params.entry) {
-      const entry = params.entry!;
-      this._allDay = isDate(entry.dtstart);
-      this._summary = entry.summary;
-      this._description = entry.description;
-      this._rrule = entry.rrule;
-      if (this._allDay) {
-        this._dtstart = new Date(entry.dtstart + "T00:00:00");
-        // Calendar event end dates are exclusive, but not shown that way in the UI. The
-        // reverse happens when persisting the event.
-        this._dtend = addDays(new Date(entry.dtend + "T00:00:00"), -1);
-      } else {
-        this._dtstart = new Date(entry.dtstart);
-        this._dtend = new Date(entry.dtend);
-      }
-    } else {
-      this._allDay = false;
-      // If we have been provided a selected date (e.g. based on the currently displayed
-      // day in a calendar view), use that as the starting value.
-      this._dtstart = startOfHour(
-        params.selectedDate ? params.selectedDate : new Date()
-      );
-      this._dtend = addHours(this._dtstart, 1);
-    }
+
+    this._allDay = false;
+    this._dtstart = new Date("1970-01-01T00:00:00");
+    this._dtend = new Date("1970-01-01T00:00:00");
+    this._summary = "hej";
+    this._description = "hej";
+    this._starttime = "00:07:07";
+    this._endtime = "00:03:03";
+
   }
 
   public closeDialog(): void {
     if (!this._params) {
       return;
     }
-    this._calendarId = undefined;
     this._params = undefined;
     this._dtstart = undefined;
     this._dtend = undefined;
     this._summary = "";
     this._description = "";
-    this._rrule = undefined;
+
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
 
@@ -136,9 +122,9 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     }
     const isCreate = this._params.entry === undefined;
 
-    const { startDate, startTime, endDate, endTime } = this._getLocaleStrings(
-      this._dtstart,
-      this._dtend
+    const {startTime, endTime } = this._getLocaleStrings(
+      this._starttime,
+      this._endtime
     );
 
     return html`
@@ -215,7 +201,6 @@ class DialogCalendarTemplateEventEditor extends LitElement {
               >${this.hass.localize("ui.components.calendar.event.end")}:</span
             >
             <div class="flex">
-
               ${!this._allDay
                 ? html`<ha-time-input
                     .value=${endTime}
@@ -231,7 +216,7 @@ class DialogCalendarTemplateEventEditor extends LitElement {
           ? html`
               <mwc-button
                 slot="primaryAction"
-                @click=${this._createEvent}
+                @click=${console.log("Click")}
                 .disabled=${this._submitting}
               >
                 ${this.hass.localize("ui.components.calendar.event.add")}
@@ -240,7 +225,7 @@ class DialogCalendarTemplateEventEditor extends LitElement {
           : html`
               <mwc-button
                 slot="primaryAction"
-                @click=${this._saveEvent}
+                @click=${console.log("Click")}
                 .disabled=${this._submitting}
               >
                 ${this.hass.localize("ui.components.calendar.event.save")}
@@ -250,7 +235,7 @@ class DialogCalendarTemplateEventEditor extends LitElement {
                     <mwc-button
                       slot="secondaryAction"
                       class="warning"
-                      @click=${this._deleteEvent}
+                      @click=${console.log("Click")}
                       .disabled=${this._submitting}
                     >
                       ${this.hass.localize(
@@ -268,11 +253,9 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     supportsFeature(entityStateObj, CalendarEntityFeature.CREATE_EVENT);
 
   private _getLocaleStrings = memoizeOne(
-    (startDate?: Date, endDate?: Date) => ({
-      startDate: this._formatDate(startDate!),
-      startTime: this._formatTime(startDate!),
-      endDate: this._formatDate(endDate!),
-      endTime: this._formatTime(endDate!),
+    (startTime?: string, endTime?: string) => ({
+      startTime: this._formatTime(startTime!),
+      endTime: this._formatTime(endTime!),
     })
   );
 
@@ -281,9 +264,9 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     return formatInTimeZone(date, timeZone, "yyyy-MM-dd");
   }
 
-  // Formats a time in specified timezone, or defaulting to browser display timezone
-  private _formatTime(date: Date, timeZone: string = this._timeZone!): string {
-    return formatInTimeZone(date, timeZone, "HH:mm:ss"); // 24 hr
+  // Formats a time in specified timezone, or defaulting to browser display timezone, OBS! uses hardcoded date
+  private _formatTime(time: string, timeZone: string = this._timeZone!): string {
+    return formatInTimeZone("1970-01-01T" + time, timeZone, "HH:mm:ss"); // 24 hr
   }
 
   // Parse a date in the browser timezone
@@ -303,37 +286,14 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     this._description = ev.target.value;
   }
 
-  private _handleRRuleChanged(ev) {
-    this._rrule = ev.detail.value;
-  }
+  // private _handleRRuleChanged(ev) {
+  //   this._rrule = ev.detail.value;
+  // }
 
   private _allDayToggleChanged(ev) {
     this._allDay = ev.target.checked;
   }
 
-  private _startDateChanged(ev: CustomEvent) {
-    // Store previous event duration
-    const duration = differenceInMilliseconds(this._dtend!, this._dtstart!);
-
-    this._dtstart = this._parseDate(
-      `${ev.detail.value}T${this._formatTime(this._dtstart!)}`
-    );
-
-    // Prevent that the end time can be before the start time. Try to keep the
-    // duration the same.
-    if (this._dtend! <= this._dtstart!) {
-      this._dtend = addMilliseconds(this._dtstart, duration);
-      this._info = this.hass.localize(
-        "ui.components.calendar.event.end_auto_adjusted"
-      );
-    }
-  }
-
-  private _endDateChanged(ev: CustomEvent) {
-    this._dtend = this._parseDate(
-      `${ev.detail.value}T${this._formatTime(this._dtend!)}`
-    );
-  }
 
   private _startTimeChanged(ev: CustomEvent) {
     // Store previous event duration
@@ -359,34 +319,34 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     );
   }
 
-  private _calculateData() {
-    const data: CalendarEventMutableParams = {
-      summary: this._summary,
-      description: this._description,
-      rrule: this._rrule || undefined,
-      dtstart: "",
-      dtend: "",
-    };
-    if (this._allDay) {
-      data.dtstart = this._formatDate(this._dtstart!);
-      // End date/time is exclusive when persisted
-      data.dtend = this._formatDate(addDays(this._dtend!, 1));
-    } else {
-      data.dtstart = `${this._formatDate(
-        this._dtstart!,
-        this.hass.config.time_zone
-      )}T${this._formatTime(this._dtstart!, this.hass.config.time_zone)}`;
-      data.dtend = `${this._formatDate(
-        this._dtend!,
-        this.hass.config.time_zone
-      )}T${this._formatTime(this._dtend!, this.hass.config.time_zone)}`;
-    }
-    return data;
-  }
+  // private _calculateData() {
+  //   const data: CalendarTemplateEventMutableParams = {
+  //     summary: this._summary,
+  //     description: this._description,
+  //     // rrule: this._rrule || undefined,
+  //     dtstart: "",
+  //     dtend: "",
+  //   };
+  //   if (this._allDay) {
+  //     data.dtstart = this._formatDate(this._dtstart!);
+  //     // End date/time is exclusive when persisted
+  //     data.dtend = this._formatDate(addDays(this._dtend!, 1));
+  //   } else {
+  //     data.dtstart = `${this._formatDate(
+  //       this._dtstart!,
+  //       this.hass.config.time_zone
+  //     )}T${this._formatTime(this._dtstart!, this.hass.config.time_zone)}`;
+  //     data.dtend = `${this._formatDate(
+  //       this._dtend!,
+  //       this.hass.config.time_zone
+  //     )}T${this._formatTime(this._dtend!, this.hass.config.time_zone)}`;
+  //   }
+  //   return data;
+  // }
 
-  private _handleCalendarChanged(ev: CustomEvent) {
-    this._calendarId = ev.detail.value;
-  }
+  // private _handleCalendarChanged(ev: CustomEvent) {
+  //   this._calendarId = ev.detail.value;
+  // }
 
   private _isValidStartEnd(): boolean {
     if (this._allDay) {
@@ -395,155 +355,155 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     return this._dtend! > this._dtstart!;
   }
 
-  private async _createEvent() {
-    if (!this._summary || !this._calendarId) {
-      this._error = this.hass.localize(
-        "ui.components.calendar.event.not_all_required_fields"
-      );
-      return;
-    }
+  // private async _createEvent() {
+  //   if (!this._summary || !this._calendarId) {
+  //     this._error = this.hass.localize(
+  //       "ui.components.calendar.event.not_all_required_fields"
+  //     );
+  //     return;
+  //   }
 
-    if (!this._isValidStartEnd()) {
-      this._error = this.hass.localize(
-        "ui.components.calendar.event.invalid_duration"
-      );
-      return;
-    }
+  //   if (!this._isValidStartEnd()) {
+  //     this._error = this.hass.localize(
+  //       "ui.components.calendar.event.invalid_duration"
+  //     );
+  //     return;
+  //   }
 
-    this._submitting = true;
-    try {
-      await createCalendarEvent(
-        this.hass!,
-        this._calendarId!,
-        this._calculateData()
-      );
-    } catch (err: any) {
-      this._error = err ? err.message : "Unknown error";
-      return;
-    } finally {
-      this._submitting = false;
-    }
-    await this._params!.updated();
-    this.closeDialog();
-  }
+  //   this._submitting = true;
+  //   try {
+  //     await createCalendarEvent(
+  //       this.hass!,
+  //       this._calendarId!,
+  //       this._calculateData()
+  //     );
+  //   } catch (err: any) {
+  //     this._error = err ? err.message : "Unknown error";
+  //     return;
+  //   } finally {
+  //     this._submitting = false;
+  //   }
+  //   await this._params!.updated();
+  //   this.closeDialog();
+  // }
 
-  private async _saveEvent() {
-    if (!this._summary || !this._calendarId) {
-      this._error = this.hass.localize(
-        "ui.components.calendar.event.not_all_required_fields"
-      );
-      return;
-    }
+  // private async _saveEvent() {
+  //   if (!this._summary || !this._calendarId) {
+  //     this._error = this.hass.localize(
+  //       "ui.components.calendar.event.not_all_required_fields"
+  //     );
+  //     return;
+  //   }
 
-    if (!this._isValidStartEnd()) {
-      this._error = this.hass.localize(
-        "ui.components.calendar.event.invalid_duration"
-      );
-      return;
-    }
+  //   if (!this._isValidStartEnd()) {
+  //     this._error = this.hass.localize(
+  //       "ui.components.calendar.event.invalid_duration"
+  //     );
+  //     return;
+  //   }
 
-    this._submitting = true;
-    const entry = this._params!.entry!;
-    let range: RecurrenceRange | undefined = RecurrenceRange.THISEVENT;
-    if (entry.recurrence_id) {
-      range = await showConfirmEventDialog(this, {
-        title: this.hass.localize(
-          "ui.components.calendar.event.confirm_update.update"
-        ),
-        text: this.hass.localize(
-          "ui.components.calendar.event.confirm_update.recurring_prompt"
-        ),
-        confirmText: this.hass.localize(
-          "ui.components.calendar.event.confirm_update.update_this"
-        ),
-        confirmFutureText: this.hass.localize(
-          "ui.components.calendar.event.confirm_update.update_future"
-        ),
-      });
-    }
-    if (range === undefined) {
-      // Cancel
-      this._submitting = false;
-      return;
-    }
-    const eventData = this._calculateData();
-    if (entry.rrule && eventData.rrule && range === RecurrenceRange.THISEVENT) {
-      // Updates to a single instance of a recurring event by definition
-      // cannot change the recurrence rule and doing so would be invalid.
-      // It is difficult to detect if the user changed the recurrence rule
-      // since updating the date may change it implicitly (e.g. day of week
-      // of the event changes) so we just assume the users intent based on
-      // recurrence range and drop any other rrule changes.
-      eventData.rrule = undefined;
-    }
-    try {
-      await updateCalendarEvent(
-        this.hass!,
-        this._calendarId!,
-        entry.uid!,
-        eventData,
-        entry.recurrence_id || "",
-        range!
-      );
-    } catch (err: any) {
-      this._error = err ? err.message : "Unknown error";
-      return;
-    } finally {
-      this._submitting = false;
-    }
-    await this._params!.updated();
-    this.closeDialog();
-  }
+  //   this._submitting = true;
+  //   const entry = this._params!.entry!;
+  //   let range: RecurrenceRange | undefined = RecurrenceRange.THISEVENT;
+  //   if (entry.recurrence_id) {
+  //     range = await showConfirmEventDialog(this, {
+  //       title: this.hass.localize(
+  //         "ui.components.calendar.event.confirm_update.update"
+  //       ),
+  //       text: this.hass.localize(
+  //         "ui.components.calendar.event.confirm_update.recurring_prompt"
+  //       ),
+  //       confirmText: this.hass.localize(
+  //         "ui.components.calendar.event.confirm_update.update_this"
+  //       ),
+  //       confirmFutureText: this.hass.localize(
+  //         "ui.components.calendar.event.confirm_update.update_future"
+  //       ),
+  //     });
+  //   }
+  //   if (range === undefined) {
+  //     // Cancel
+  //     this._submitting = false;
+  //     return;
+  //   }
+  //   const eventData = this._calculateData();
+  //   if (entry.rrule && eventData.rrule && range === RecurrenceRange.THISEVENT) {
+  //     // Updates to a single instance of a recurring event by definition
+  //     // cannot change the recurrence rule and doing so would be invalid.
+  //     // It is difficult to detect if the user changed the recurrence rule
+  //     // since updating the date may change it implicitly (e.g. day of week
+  //     // of the event changes) so we just assume the users intent based on
+  //     // recurrence range and drop any other rrule changes.
+  //     eventData.rrule = undefined;
+  //   }
+  //   try {
+  //     await updateCalendarEvent(
+  //       this.hass!,
+  //       this._calendarId!,
+  //       entry.uid!,
+  //       eventData,
+  //       entry.recurrence_id || "",
+  //       range!
+  //     );
+  //   } catch (err: any) {
+  //     this._error = err ? err.message : "Unknown error";
+  //     return;
+  //   } finally {
+  //     this._submitting = false;
+  //   }
+  //   await this._params!.updated();
+  //   this.closeDialog();
+  // }
 
-  private async _deleteEvent() {
-    this._submitting = true;
-    const entry = this._params!.entry!;
-    const range = await showConfirmEventDialog(this, {
-      title: this.hass.localize(
-        "ui.components.calendar.event.confirm_delete.delete"
-      ),
-      text: entry.recurrence_id
-        ? this.hass.localize(
-            "ui.components.calendar.event.confirm_delete.recurring_prompt"
-          )
-        : this.hass.localize(
-            "ui.components.calendar.event.confirm_delete.prompt"
-          ),
-      confirmText: entry.recurrence_id
-        ? this.hass.localize(
-            "ui.components.calendar.event.confirm_delete.delete_this"
-          )
-        : this.hass.localize(
-            "ui.components.calendar.event.confirm_delete.delete"
-          ),
-      confirmFutureText: entry.recurrence_id
-        ? this.hass.localize(
-            "ui.components.calendar.event.confirm_delete.delete_future"
-          )
-        : undefined,
-    });
-    if (range === undefined) {
-      // Cancel
-      this._submitting = false;
-      return;
-    }
-    try {
-      await deleteCalendarEvent(
-        this.hass!,
-        this._calendarId!,
-        entry.uid!,
-        entry.recurrence_id || "",
-        range!
-      );
-    } catch (err: any) {
-      this._error = err ? err.message : "Unknown error";
-      return;
-    } finally {
-      this._submitting = false;
-    }
-    await this._params!.updated();
-    this.closeDialog();
-  }
+  // private async _deleteEvent() {
+  //   this._submitting = true;
+  //   const entry = this._params!.entry!;
+  //   const range = await showConfirmEventDialog(this, {
+  //     title: this.hass.localize(
+  //       "ui.components.calendar.event.confirm_delete.delete"
+  //     ),
+  //     text: entry.recurrence_id
+  //       ? this.hass.localize(
+  //           "ui.components.calendar.event.confirm_delete.recurring_prompt"
+  //         )
+  //       : this.hass.localize(
+  //           "ui.components.calendar.event.confirm_delete.prompt"
+  //         ),
+  //     confirmText: entry.recurrence_id
+  //       ? this.hass.localize(
+  //           "ui.components.calendar.event.confirm_delete.delete_this"
+  //         )
+  //       : this.hass.localize(
+  //           "ui.components.calendar.event.confirm_delete.delete"
+  //         ),
+  //     confirmFutureText: entry.recurrence_id
+  //       ? this.hass.localize(
+  //           "ui.components.calendar.event.confirm_delete.delete_future"
+  //         )
+  //       : undefined,
+  //   });
+  //   if (range === undefined) {
+  //     // Cancel
+  //     this._submitting = false;
+  //     return;
+  //   }
+  //   try {
+  //     await deleteCalendarEvent(
+  //       this.hass!,
+  //       this._calendarId!,
+  //       entry.uid!,
+  //       entry.recurrence_id || "",
+  //       range!
+  //     );
+  //   } catch (err: any) {
+  //     this._error = err ? err.message : "Unknown error";
+  //     return;
+  //   } finally {
+  //     this._submitting = false;
+  //   }
+  //   await this._params!.updated();
+  //   this.closeDialog();
+  // }
 
   static get styles(): CSSResultGroup {
     return [

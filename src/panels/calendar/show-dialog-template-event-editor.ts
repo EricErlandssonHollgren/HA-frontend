@@ -2,9 +2,9 @@ import { fireEvent } from "../../common/dom/fire_event";
 import type { CalendarEventData } from "../../data/calendar";
 
 export interface CalendarEventEditDialogParams {
-  calendarId?: string;
-  selectedDate?: Date; // When provided is used as the pre-filled date for the event creation dialog
-  entry?: CalendarEventData;
+  // entry?: CalendarEventData;
+    //entry?: CalendarTemplateEvent;    kanske denna istället
+  weekday_int: number;
   canDelete?: boolean;
   updated: () => void;
 }

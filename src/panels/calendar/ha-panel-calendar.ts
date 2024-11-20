@@ -26,7 +26,7 @@ import { showConfigFlowDialog } from "../../dialogs/config-flow/show-dialog-conf
 import { haStyle } from "../../resources/styles";
 import type { CalendarViewChanged, HomeAssistant } from "../../types";
 import "./ha-full-calendar";
-import { showCalendarTemplateCreateDialog } from "./show-dialog-calendar-template-create";
+import { showCalendarTemplateEventEditDialog } from "./show-dialog-template-event-editor";
 
 @customElement("ha-panel-calendar")
 class PanelCalendar extends LitElement {
@@ -258,9 +258,8 @@ class PanelCalendar extends LitElement {
   }
 
   private async _createTemplate(): Promise<void> {
-    showCalendarTemplateCreateDialog(this, {
-      events: this._events,
-      calendars: this._calendars,
+    showCalendarTemplateEventEditDialog(this, {
+      weekday_int: 1,  // Fetch the correct weekday
       updated: () => {
         this._handleRefresh();
       },
