@@ -82,7 +82,10 @@ class DialogCalendarEventDetail extends LitElement {
                 : ""}
               ${this._data.description
                 ? html`<br />
-                    <div class="description">${this._data.description}</div>
+                      <div class="description">
+                        ${this._data.description.split('\n').map(
+                        (line) => html`${line}<br />`)}
+                      </div>
                     <br />`
                 : nothing}
             </div>
