@@ -43,6 +43,21 @@ export interface CalendarEventMutableParams {
 
 export interface CalendarTemplateEvents {
   template_events: CalendarEventMutableParams[];
+  // template_name: string; Commenting out to not mess up for my team<3
+  // template_creation_date: string;
+}
+
+export interface CalendarTemplateViewEventItem {
+  summary: string;
+  weekday_int: number;
+  start_time: string;
+  end_time: string;
+  description?: string;
+}
+
+export interface CalendarTemplateViewFullTemplate {
+  template_id: string;
+  template_view_events: CalendarTemplateViewEventItem[]
 }
 
 // The scope of a delete/update for a recurring event
@@ -206,3 +221,38 @@ export const deleteCalendarEvent = (
     recurrence_id,
     recurrence_range,
   });
+
+  export const fetchCalendarTemplates = async (
+    hass: HomeAssistant,
+    calendars: Calendar[]
+  ): Promise<{ templates: CalendarTemplateViewFullTemplate[]; errors: string[] }> => {
+  
+    const errors: string[] = [];
+    const promises: Promise<CalendarTemplateViewFullTemplate[]>[] = [];
+  
+    calendars.forEach((cal) => {
+      promises.push(
+        hass.callApi<CalendarTemplateViewFullTemplate[]>(
+          "GET",
+          `calendars/${cal.entity_id}/templates`
+        )
+      );
+    });
+    const templateList: CalendarTemplateViewFullTemplate[] = [];
+  
+    let result: CalendarTemplateViewFullTemplate[];
+    for (const [idx, promise] of promises.entries()) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        result = await promise;
+      } catch (err) {
+        errors.push(calendars[idx].entity_id);
+        continue;
+      }
+      result.forEach((template) => {
+        templateList.push(template);
+      });
+    }
+
+    return { templates: templateList, errors };
+  };
