@@ -43,6 +43,7 @@ export interface CalendarEventMutableParams {
 
 export interface CalendarTemplateEvents {
   template_events: CalendarEventMutableParams[];
+  //template_name: string;
 }
 
 // The scope of a delete/update for a recurring event
