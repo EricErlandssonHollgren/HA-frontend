@@ -69,6 +69,7 @@ class DialogCalendarEventEditor extends LitElement {
 
   @state() private _submitting = false;
 
+  @state() private _attendees?: any[];
   // Dates are displayed in the timezone according to the user's profile
   // which may be different from the Home Assistant timezone. When
   // events are persisted, they are relative to the Home Assistant
@@ -95,6 +96,7 @@ class DialogCalendarEventEditor extends LitElement {
       this._allDay = isDate(entry.dtstart);
       this._summary = entry.summary;
       this._description = entry.description;
+      this._attendees = entry.attendees;
       this._rrule = entry.rrule;
       if (this._allDay) {
         this._dtstart = new Date(entry.dtstart + "T00:00:00");
@@ -126,6 +128,7 @@ class DialogCalendarEventEditor extends LitElement {
     this._dtend = undefined;
     this._summary = "";
     this._description = "";
+    this._attendees = [];
     this._rrule = undefined;
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
@@ -187,6 +190,23 @@ class DialogCalendarEventEditor extends LitElement {
             @change=${this._handleDescriptionChanged}
             autogrow
           ></ha-textarea>
+          <div class="attendees">
+            <span>Attendees</span>
+            ${this._attendees?.map(
+              (attendee, index) => html`
+                <ha-textfield
+                  .value=${attendee.email}
+                  .label=${"Attendee"}
+                  @change=${this._handleAttendeesChanged}
+                >
+                </ha-textfield>
+              `
+            )}
+            <ha-button
+              .label=${"Add attendee"}
+              @click=${this._addAttendee}
+            ></ha-button>
+          </div>
           <ha-entity-picker
             name="calendar"
             .hass=${this.hass}
@@ -336,6 +356,35 @@ class DialogCalendarEventEditor extends LitElement {
     this._description = ev.target.value;
   }
 
+  private _addAttendee(ev: Event) {
+    const newAttendee = {
+      comment: null,
+      display_name: null,
+      email: "",
+      id: null,
+      optional: false,
+      response_status: "",
+    };
+    this._attendees = [...(this._attendees ?? []), newAttendee];
+    console.log(this._attendees)
+  }
+
+  private _handleAttendeesChanged(ev: Event): void {
+    const target = ev.target as HTMLInputElement;
+    const newValue = target.value;
+    const index = this._attendees?.findIndex(
+      (attendee) => attendee === target.value
+    );
+
+    if (index !== undefined && index !== -1) {
+      // Create a new array to trigger reactivity
+      this._attendees = [...(this._attendees ?? [])];
+      this._attendees[index] = newValue;
+
+      console.log("changed", newValue, index);
+    }
+  }
+
   private _handleRRuleChanged(ev) {
     this._rrule = ev.detail.value;
   }
@@ -396,6 +445,7 @@ class DialogCalendarEventEditor extends LitElement {
     const data: CalendarEventMutableParams = {
       summary: this._summary,
       description: this._description,
+      attendees: this._attendees,
       rrule: this._rrule || undefined,
       dtstart: "",
       dtend: "",
@@ -591,6 +641,10 @@ class DialogCalendarEventEditor extends LitElement {
         state-info {
           line-height: 40px;
         }
+        ha-button {
+          align-self: center;
+          margin-bottom: 16px;
+        }
         ha-alert {
           display: block;
           margin-bottom: 16px;
@@ -601,6 +655,9 @@ class DialogCalendarEventEditor extends LitElement {
         }
         ha-textarea {
           margin-bottom: 16px;
+        }
+        ha-textfield {
+          margin-bottom: 8px;
         }
         ha-formfield {
           display: block;
@@ -651,6 +708,10 @@ class DialogCalendarEventEditor extends LitElement {
         .value {
           display: inline-block;
           vertical-align: top;
+        }
+        .attendee {
+          display: flex;
+          flex-direction: column;
         }
       `,
     ];

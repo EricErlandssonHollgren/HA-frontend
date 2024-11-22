@@ -1,5 +1,5 @@
 import "@material/mwc-button";
-import { mdiCalendarClock } from "@mdi/js";
+import { mdiCalendarClock, mdiCalendarCheck } from "@mdi/js";
 import { toDate } from "date-fns-tz";
 import { addDays, isSameDay } from "date-fns";
 import type { CSSResultGroup } from "lit";
@@ -87,7 +87,21 @@ class DialogCalendarEventDetail extends LitElement {
                 : nothing}
             </div>
           </div>
-
+          <div class="field">
+            <ha-svg-icon .path=${mdiCalendarCheck}></ha-svg-icon>
+            <div class="value">
+              ${this._data?.attendees?.length
+                ? this._data.attendees.map(
+                    (attendee) => html`
+                      <div style="margin-bottom: 8px; display: flex; gap: 8px;">
+                        <div>${attendee.email}</div>
+                        <div>${attendee.response_status}</div>
+                      </div>
+                    `
+                  )
+                : "No attendees"}
+            </div>
+          </div>
           <div class="attribute">
             <state-info
               .hass=${this.hass}
