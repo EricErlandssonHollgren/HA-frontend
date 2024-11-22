@@ -17,16 +17,8 @@ import type{
   CalendarTemplateEvents,
 } from "../../data/calendar";
 
-declare global {
-  interface HTMLElementTagNameMap {
-    "ha-template-calendar": HATemplateCalendar;
-  }
-  interface HASSDomEvents {
-    "view-changed": CalendarViewChanged;
-  }
-}
 
-@customElement("ha-template-calendar")
+@customElement("dialog-calendar-template-create")
 export class DialogCalendarTemplateCreate extends LitElement {
   public hass!: HomeAssistant;
 
@@ -466,6 +458,7 @@ export class DialogCalendarTemplateCreate extends LitElement {
     ];
   }
 }
+
 declare global {
   interface HTMLElementTagNameMap {
     "dialog-calendar-template-create": DialogCalendarTemplateCreate;

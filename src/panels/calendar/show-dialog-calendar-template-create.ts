@@ -19,7 +19,7 @@ export const showCalendarTemplateCreateDialog = (
   detailParams: CalendarTemplateCreateDialogParams
 ): void => {
   fireEvent(element, "show-dialog", {
-    dialogTag: "ha-template-calendar",
+    dialogTag: "dialog-calendar-template-create",
     dialogImport: loadCalendarTemplateCreateDialog,
     dialogParams: detailParams,
   });
