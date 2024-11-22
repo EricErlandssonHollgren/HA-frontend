@@ -136,11 +136,13 @@ export class DialogCalendarTemplateCreate extends LitElement {
                         ${dayEvents.length > 0
                           ? dayEvents.map(
                               (event) => html`
+                              <button>
                                 <div class="event">
                                   <strong>${event.summary}</strong><br />
                                   ${event.start_time} - ${event.end_time}<br />
                                   ${event.description || ""}
                                 </div>
+                              </button>
                               `
                             )
                           : html` <div class="no-events">No events</div> `}
