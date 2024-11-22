@@ -107,9 +107,6 @@ export class DialogCalendarTemplateCreate extends LitElement {
         scrimClickAction
         escapeKeyAction=${this.closeDialog}
         .heading=${createCloseHeading(this.hass, "Create template"
-        // this.hass.localize(
-        //   `ui.components.calendar.event.${"add"}`
-        // )
        )}
         style="--dialog-content-padding: 24px; width: 1000px; max-width: 90%;"
       >
