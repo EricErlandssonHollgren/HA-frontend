@@ -31,7 +31,7 @@ export interface CalendarEventData {
   dtend: string;
   rrule?: string;
   description?: string;
-  attendees?: [string];
+  attendees?: [any];
 }
 
 export interface CalendarEventMutableParams {
@@ -40,7 +40,7 @@ export interface CalendarEventMutableParams {
   dtend: string;
   rrule?: string;
   description?: string;
-  attendees?: string[];
+  attendees?: any[];
 }
 
 // The scope of a delete/update for a recurring event

@@ -193,7 +193,7 @@ class DialogCalendarEventEditor extends LitElement {
           <div class="attendees">
             <span>Attendees</span>
             ${this._attendees?.map(
-              (attendee, index) => html`
+              (attendee) => html`
                 <ha-textfield
                   .value=${attendee.email}
                   .label=${"Attendee"}
@@ -356,7 +356,7 @@ class DialogCalendarEventEditor extends LitElement {
     this._description = ev.target.value;
   }
 
-  private _addAttendee(ev: Event) {
+  private _addAttendee() {
     const newAttendee = {
       comment: null,
       display_name: null,
@@ -366,7 +366,6 @@ class DialogCalendarEventEditor extends LitElement {
       response_status: "",
     };
     this._attendees = [...(this._attendees ?? []), newAttendee];
-    console.log(this._attendees)
   }
 
   private _handleAttendeesChanged(ev: Event): void {
@@ -380,8 +379,6 @@ class DialogCalendarEventEditor extends LitElement {
       // Create a new array to trigger reactivity
       this._attendees = [...(this._attendees ?? [])];
       this._attendees[index] = newValue;
-
-      console.log("changed", newValue, index);
     }
   }
 
