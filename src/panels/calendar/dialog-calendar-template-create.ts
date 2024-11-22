@@ -7,6 +7,7 @@ import "../../components/ha-button-toggle-group";
 import "../../components/ha-fab";
 import "../../components/ha-icon-button-next";
 import "../../components/ha-icon-button-prev";
+import { createCloseHeading } from "../../components/ha-dialog";
 import { haStyle } from "../../resources/styles";
 import type { CalendarViewChanged, HomeAssistant } from "../../types";
 // import { showCalendarEventDetailDialog } from "./show-dialog-calendar-event-detail";
@@ -105,6 +106,11 @@ export class DialogCalendarTemplateCreate extends LitElement {
         @closed=${this.closeDialog}
         scrimClickAction
         escapeKeyAction=${this.closeDialog}
+        .heading=${createCloseHeading(this.hass, "Create template"
+        // this.hass.localize(
+        //   `ui.components.calendar.event.${"add"}`
+        // )
+       )}
         style="--dialog-content-padding: 24px; width: 1000px; max-width: 90%;"
       >
         <div id="calendar-container">
