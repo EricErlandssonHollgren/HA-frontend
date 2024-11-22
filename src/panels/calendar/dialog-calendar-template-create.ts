@@ -142,14 +142,18 @@ export class DialogCalendarTemplateCreate extends LitElement {
                                 </div>
                               `
                             )
+                          
+
                           : html`
-                              <button
-                                class="calendar-button"
-                                @click=${() => this._openModal(day)}
-                              >
-                                Add event
-                              </button>
+                            <div class="no-events">No events</div>
                             `}
+                        <button
+                          class="calendar-button"
+                            @click=${() => this._openModal(day)}
+                          >
+                            Add event
+                        </button>
+                            
                       </td>
                     `;
                   }
