@@ -12,7 +12,7 @@ export interface CalendarTemplateCreateDialogParams {
 }
 
 export const loadCalendarTemplateCreateDialog = () =>
-  import("./ha-template-calendar");
+  import("./dialog-calendar-template-create");
 
 export const showCalendarTemplateCreateDialog = (
   element: HTMLElement,
