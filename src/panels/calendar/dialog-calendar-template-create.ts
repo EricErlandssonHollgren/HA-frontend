@@ -1,18 +1,8 @@
 import "@material/mwc-button";
-import {
-  addDays,
-  addHours,
-  addMilliseconds,
-  differenceInMilliseconds,
-  startOfHour,
-  toDate,
-} from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
-import memoizeOne from "memoize-one";
 import type { CSSResultGroup } from "lit";
 import { LitElement, css, html, nothing } from "lit";
 import { property, state } from "lit/decorators";
-import type { CalendarTemplateCreateDialogParams } from "./show-dialog-calendar-template-create";
 import { fireEvent, type HASSDomEvent } from "../../common/dom/fire_event";
 import "../../components/entity/state-info";
 import "../../components/ha-alert";
@@ -28,9 +18,7 @@ import { resolveTimeZone } from "../../common/datetime/resolve-time-zone";
 import "../../components/ha-formfield";
 import "../../components/ha-textarea";
 import "../../components/ha-switch";
-import { isDate } from "../../common/string/is_date";
-import { TimeZone } from "../../data/translation";
-import { CalendarTemplateViewEventItem } from "../../data/calendar";
+import type { CalendarTemplateViewEventItem } from "../../data/calendar";
 
 class DialogCalendarTemplateCreate extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
@@ -43,19 +31,13 @@ class DialogCalendarTemplateCreate extends LitElement {
 
   @state() private _params?: CalendarEventEditTemplateDialogParams;
 
-  //  @state() private _calendarId?: string;
-
   @state() private _summary = "";
 
   @state() private _description? = "";
 
-  @state() private _allDay = false;
-
   @state() private _dtstart?: string; // In sync with _data.dtstart
 
   @state() private _dtend?: string; // Inclusive for display, in sync with _data.dtend (exclusive)
-
-  @state() private _submitting = false;
 
   // Dates are displayed in the timezone according to the user's profile
   // which may be different from the Home Assistant timezone. When
@@ -75,81 +57,19 @@ class DialogCalendarTemplateCreate extends LitElement {
       this.hass.locale.time_zone,
       this.hass.config.time_zone
     );
-    // if (params.entry) {
-    //   const entry = params.entry!;
-      // this._allDay = isDate(entry.dtstart);
-  //     this._summary = entry.summary;
-  //     this._description = entry.description;
-
-  //     // this._dtstart = new Date(entry.dtstart);
-  //     // this._dtend = new Date(entry.dtend);
-  //     if (this._allDay) {
-  //       this._dtstart = new Date(entry.dtstart + "T00:00:00");
-  //       // Calendar event end dates are exclusive, but not shown that way in the UI. The
-  //       // reverse happens when persisting the event.
-  //       this._dtend = addDays(new Date(entry.dtend + "T00:00:00"), -1);
-  //     } else {
-  //       this._dtstart = new Date(entry.dtstart);
-  //       this._dtend = new Date(entry.dtend);
-  //     }
-  //   } else {
-  //     // If we have been provided a selected date (e.g. based on the currently displayed
-  //     // day in a calendar view), use that as the starting value.
-  //     this._dtstart = startOfHour(
-  //       params.selectedDate ? params.selectedDate : new Date()
-  //     );
-  //     this._dtend = addHours(this._dtstart, 1);
-  // }
  }
 
   private closeDialog(): void {
-    // this._calendarId = undefined;
     this._params = undefined;
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
 
-  // private _logState(): void {
-  //   console.log("hej");
-  // }
-
-  // private _addTimeInterval(event: Event) {
-  //   const button = event.target as HTMLElement;
-  //   const day = button.dataset.day as string; // Get the day (e.g., "mon", "tue")
-
-  //   // Prompt the user for a time interval
-  //   const timeInterval = window.prompt(
-  //     `Enter a time interval for ${day.toUpperCase()} (e.g., 14:00-15:00):`
-  //   );
-
-  //   // Validate the input
-  //   if (
-  //     timeInterval &&
-  //     /^[0-9]{2}:[0-9]{2}-[0-9]{2}:[0-9]{2}$/.test(timeInterval)
-  //   ) {
-  //     // Save the day and interval to the state
-  //     this._timeIntervals = [
-  //       ...this._timeIntervals,
-  //       { day, interval: timeInterval },
-  //     ];
-  //   } else if (timeInterval) {
-  //     // Alert if the format is invalid
-  //     window.alert("Invalid time format. Please use HH:MM-HH:MM.");
-  //   }
-  // }
-
-  /* TODO:
-   * Add list of already created templates (sidebar thing from design)
-   */
 
   protected render() {
     if (!this._params) {
       return nothing;
     }
-    // const {startTime, endTime } = this._getLocaleStrings(
-    //   this._dtstart,
-    //   this._dtend
-    // );
-    // const stateObj = this.hass.states[this._calendarId!];
+
     return html`
       <ha-dialog
         open
@@ -218,30 +138,6 @@ class DialogCalendarTemplateCreate extends LitElement {
   }
 
   private _saveEvent(): void {
-    // const dtstart = "";
-    // const dtend = "";
-
-    // Collect input values from modal fields
-    // const summary = (this.shadowRoot!.querySelector("#summary") as HTMLInputElement).value;
-    // const dtstart = (this.shadowRoot!.querySelector("#dtstart") as HTMLInputElement).value;
-    // const dtend = (this.shadowRoot!.querySelector("#dtend") as HTMLInputElement).value;
-    // const rrule = (this.shadowRoot!.querySelector("#rrule") as HTMLInputElement).value;
-    // const description = (this.shadowRoot!.querySelector("#description") as HTMLTextAreaElement).value;
-    // if (this._allDay) {
-    //   dtstart = this._formatDate(this._dtstart!);
-    //   // End date/time is exclusive when persisted
-    //   dtend = this._formatDate(addDays(this._dtend!, 1));
-    // } else {
-    //   dtstart = `${this._formatDate(
-    //     this._dtstart!,
-    //     this.hass.config.time_zone
-    //   )}T${this._formatTime(this._dtstart!, this.hass.config.time_zone)}`;
-    //   dtend = `${this._formatDate(
-    //     this._dtend!,
-    //     this.hass.config.time_zone
-    //   )}T${this._formatTime(this._dtend!, this.hass.config.time_zone)}`;
-    // }
-
     // Validate required fields
     if (this._summary && this._dtstart && this._dtend) {
       // Add the new event to the calendar
@@ -298,70 +194,13 @@ class DialogCalendarTemplateCreate extends LitElement {
     this._description = ev.target.value;
   }
 
-  private _allDayToggleChanged(ev) {
-    this._allDay = ev.target.checked;
-  }
-
-  // private _getLocaleStrings = memoizeOne(
-  //   (startDate?: string, endDate?: string) => ({
-  //     startTime: this._formatTime(startDate!),
-  //     endTime: this._formatTime(endDate!),
-  //   })
-  // );
-
-  // Formats a date in specified timezone, or defaulting to browser display timezone
-  // private _formatDate(timeZone: string = this._timeZone!): string {
-  //   return formatInTimeZone(timeZone, "yyyy-MM-dd");
-  // }
-
   // Formats a time in specified timezone, or defaulting to browser display timezone
   private _formatTime(date: Date, timeZone: string = this._timeZone!): string {
     return formatInTimeZone(date, timeZone, "HH:mm:ss"); // 24 hr
   }
 
-  // Parse a date in the browser timezone
-  // private _parseDate(dateStr: string): Date {
-  //   return toDate(dateStr, { timeZone: this._timeZone! });
-  // }
-
-  // private _startDateChanged(ev: CustomEvent) {
-  //   // Store previous event duration
-  //   const duration = differenceInMilliseconds(this._dtend!, this._dtstart!);
-
-  //   this._dtstart = this._parseDate(
-  //     `${ev.detail.value}T${this._formatTime(this._dtstart!)}`
-  //   );
-
-  //   // Prevent that the end time can be before the start time. Try to keep the
-  //   // duration the same.
-  //   if (this._dtend! <= this._dtstart!) {
-  //     this._dtend = addMilliseconds(this._dtstart, duration);
-  //     this._info = this.hass.localize(
-  //       "ui.components.calendar.event.end_auto_adjusted"
-  //     );
-  //   }
-  // }
-
-  // private _endDateChanged(ev: CustomEvent) {
-  //   this._dtend = this._parseDate(
-  //     `${ev.detail.value}T${this._formatTime(this._dtend!)}`
-  //   );
-  // }
-
   private _startTimeChanged(ev: CustomEvent) {
-    // Store previous event duration
-    // const duration = differenceInMilliseconds(this._dtend!, this._dtstart!);
-
     this._dtstart = ev.detail.value;
-
-    // Prevent that the end time can be before the start time. Try to keep the
-    // duration the same.
-    // if (this._dtend! <= this._dtstart!) {
-    //   this._dtend = addMilliseconds(new Date(this._dtstart), duration);
-    //   this._info = this.hass.localize(
-    //     "ui.components.calendar.event.end_auto_adjusted"
-    //   );
-    // }
   }
 
   private _endTimeChanged(ev: CustomEvent) {

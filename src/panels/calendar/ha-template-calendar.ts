@@ -1,46 +1,19 @@
-import type { CalendarOptions } from "@fullcalendar/core";
-import { Calendar } from "@fullcalendar/core";
-import allLocales from "@fullcalendar/core/locales-all";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import listPlugin from "@fullcalendar/list";
-import { ResizeController } from "@lit-labs/observers/resize-controller";
 import "@material/mwc-button";
-import {
-  mdiPlus,
-  mdiViewAgenda,
-  mdiViewDay,
-  mdiViewModule,
-  mdiViewWeek,
-} from "@mdi/js";
-import type { CSSResultGroup, PropertyValues } from "lit";
+import type { CSSResultGroup } from "lit";
 import { LitElement, css, html, nothing } from "lit";
-import { customElement, property, state } from "lit/decorators";
-import memoize from "memoize-one";
-import { firstWeekdayIndex } from "../../common/datetime/first_weekday";
-import { useAmPm } from "../../common/datetime/use_am_pm";
+import { customElement, state } from "lit/decorators";
 import { fireEvent } from "../../common/dom/fire_event";
-import { supportsFeature } from "../../common/entity/supports-feature";
-import type { LocalizeFunc } from "../../common/translations/localize";
 import "../../components/ha-button-toggle-group";
 import "../../components/ha-fab";
 import "../../components/ha-icon-button-next";
 import "../../components/ha-icon-button-prev";
-import { TimeZone } from "../../data/translation";
 import { haStyle } from "../../resources/styles";
-import type {
-  CalendarViewChanged,
-  FullCalendarView,
-  HomeAssistant,
-  ToggleButton,
-} from "../../types";
+import type { CalendarViewChanged, HomeAssistant } from "../../types";
 // import { showCalendarEventDetailDialog } from "./show-dialog-calendar-event-detail";
 import { showCalendarEventEditTemplateDialog } from "./show-dialog-calendar-event-editor-template";
 import type { CalendarTemplateCreateDialogParams } from "./show-dialog-calendar-template-create";
-import {
+import type{ 
   CalendarTemplateViewEventItem,
-  createCalendarEvent,
-  type CalendarEventMutableParams,
   type CalendarTemplateEvents,
 } from "../../data/calendar";
 
@@ -52,30 +25,6 @@ declare global {
     "view-changed": CalendarViewChanged;
   }
 }
-
-// const defaultFullCalendarConfig: CalendarOptions = {
-//   headerToolbar: false,
-//   plugins: [dayGridPlugin, listPlugin, interactionPlugin],
-//   initialView: "dayGridWeek",
-//   dayMaxEventRows: true,
-//   height: "parent",
-//   handleWindowResize: false,
-//   locales: allLocales,
-//   views: {
-//     listWeek: {
-//       type: "list",
-//       duration: { days: 7 },
-//     },
-//   },
-// };
-
-/* TODO:
- * Keep only what we need
- * How do we choose which calendar to add the template to?
- * Add save buton
- * Fix header corresponding to dates viewed
- * Add button on each day to add event like design (might be hard?) Alternate solution may be to add from a central button and chose date in a modal
- */
 
 @customElement("ha-template-calendar")
 export class HATemplateCalendar extends LitElement {
@@ -90,65 +39,14 @@ export class HATemplateCalendar extends LitElement {
   ): Promise<void> {
     this._params = params;
   }
-  // @property({ type: Boolean, reflect: true }) public narrow = false;
 
-  // @property({ attribute: false }) public events: CalendarEvent[] = [];
-
-  // @property({ attribute: false }) public calendars: CalendarData[] = [];
-
-  // @property({ attribute: false }) public views: FullCalendarView[] = [
-  //   "dayGridMonth",
-  //   "dayGridWeek",
-  //   "dayGridDay",
-  //   "listWeek",
-  // ];
-
-  // @property() public initialView: FullCalendarView = "dayGridWeek";
-
-  // @property() public eventDisplay = "auto";
-
-  // @property({ attribute: false }) public error?: string = undefined;
-
-  // private calendar?: Calendar;
-
-  // private _viewButtons?: ToggleButton[];
-
-  // @state() private _activeView = this.initialView;
-
-  // // @ts-ignore
-  // private _resizeController = new ResizeController(this, {
-  //   callback: () => this.calendar?.updateSize(),
-  // });
-
-  // disconnectedCallback(): void {
-  //   super.disconnectedCallback();
-  //   this.calendar?.destroy();
-  //   this.calendar = undefined;
-  //   this.renderRoot.querySelector("style[data-fullcalendar]")?.remove();
-  // }
-
-  // connectedCallback(): void {
-  //   super.connectedCallback();
-  //   if (this.hasUpdated && !this.calendar) {
-  //     this._loadCalendar(this._activeView);
-  //   }
-  // }
   private closeDialog(): void {
-    // this._calendarId = undefined;
     this._params = undefined;
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
 
   connectedCallback(): void {
     super.connectedCallback();
-
-    // this.addEventListener("calendar-events-updated", (event) => {
-    //   const detail = (event as CustomEvent<CalendarTemplateEvents>).detail;
-    //   console.log("hejsanhejsan");
-    //   if (detail?.template_events) {
-    //     this._updateCalendarEvents(detail);
-    //   }
-    // });
   }
 
   private _openModal(day: string): void {
@@ -168,12 +66,6 @@ export class HATemplateCalendar extends LitElement {
     console.log("Calendar events updated hejhej:", events);
   }
 
-  private getDateString(dateAndTime) {
-    const splitDate = dateAndTime.split("T");
-
-    return this.getDayOfWeek(splitDate[0]);
-  }
-
   // Accepts a Date object or date string that is recognized by the Date.parse() method
   private getDayOfWeek(date) {
     const dayOfWeek = new Date(date).getDay();
@@ -190,14 +82,24 @@ export class HATemplateCalendar extends LitElement {
         ][dayOfWeek];
   }
 
-  private _convertIntDayToString(dayNumber: number) : string {
-    const daysArray: string[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+  private _convertIntDayToString(dayNumber: number): string {
+    const daysArray: string[] = [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri",
+      "sat",
+      "sun",
+    ];
 
     if (dayNumber >= 0 && dayNumber <= 6) {
-        return daysArray[dayNumber];
+      return daysArray[dayNumber];
     }
 
-    throw new Error(`Invalid day number: ${dayNumber}. Must be between 0 and 6.`);
+    throw new Error(
+      `Invalid day number: ${dayNumber}. Must be between 0 and 6.`
+    );
   }
 
   protected render() {
@@ -230,10 +132,11 @@ export class HATemplateCalendar extends LitElement {
               <tr>
                 ${["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
                   (day) => {
-                    const dayEvents =
-                      this._calendarEvents.filter((event) =>
-                        this._convertIntDayToString(event.weekday_int).startsWith(day)
-                      );
+                    const dayEvents = this._calendarEvents.filter((event) =>
+                      this._convertIntDayToString(event.weekday_int).startsWith(
+                        day
+                      )
+                    );
 
                     return html`
                       <td>
@@ -242,9 +145,7 @@ export class HATemplateCalendar extends LitElement {
                               (event) => html`
                                 <div class="event">
                                   <strong>${event.summary}</strong><br />
-                                  ${event.start_time}
-                                  -
-                                  ${event.end_time}<br />
+                                  ${event.start_time} - ${event.end_time}<br />
                                   ${event.description || ""}
                                 </div>
                               `
@@ -268,214 +169,6 @@ export class HATemplateCalendar extends LitElement {
       </ha-dialog>
     `;
   }
-
-  // public willUpdate(changedProps: PropertyValues): void {
-  //   super.willUpdate(changedProps);
-
-  //   if (!this.calendar) {
-  //     return;
-  //   }
-
-  //   if (changedProps.has("events")) {
-  //     this.calendar.removeAllEventSources();
-  //     this.calendar.addEventSource(this.events);
-  //   }
-
-  //   if (changedProps.has("views") && !this.views.includes(this._activeView!)) {
-  //     this._activeView =
-  //       this.initialView && this.views.includes(this.initialView)
-  //         ? this.initialView
-  //         : this.views[0];
-  //     this.calendar!.changeView(this._activeView);
-  //     this._fireViewChanged();
-  //   }
-
-  //   if (changedProps.has("eventDisplay")) {
-  //     this.calendar!.setOption("eventDisplay", this.eventDisplay);
-  //   }
-
-  //   const oldHass = changedProps.get("hass") as HomeAssistant;
-
-  //   if (oldHass && oldHass.language !== this.hass.language) {
-  //     this.calendar.setOption("locale", this.hass.language);
-  //   }
-  // }
-
-  // protected firstUpdated(): void {
-  //   this._loadCalendar(this.initialView);
-  //   this._activeView = this.initialView;
-  // }
-
-  // private async _loadCalendar(initialView: FullCalendarView) {
-  //   const luxonPlugin =
-  //     this.hass.locale.time_zone === TimeZone.local
-  //       ? undefined
-  //       : (await import("@fullcalendar/luxon3")).default;
-
-  //   const config: CalendarOptions = {
-  //     ...defaultFullCalendarConfig,
-  //     plugins:
-  //       this.hass.locale.time_zone === TimeZone.local
-  //         ? defaultFullCalendarConfig.plugins
-  //         : [...defaultFullCalendarConfig.plugins!, luxonPlugin!],
-  //     locale: this.hass.language,
-  //     timeZone:
-  //       this.hass.locale.time_zone === TimeZone.local
-  //         ? "local"
-  //         : this.hass.config.time_zone,
-  //     firstDay: firstWeekdayIndex(this.hass.locale),
-  //     initialView,
-  //     eventDisplay: this.eventDisplay,
-  //     eventTimeFormat: {
-  //       hour: useAmPm(this.hass.locale) ? "numeric" : "2-digit",
-  //       minute: useAmPm(this.hass.locale) ? "numeric" : "2-digit",
-  //       hour12: useAmPm(this.hass.locale),
-  //     },
-  //   };
-
-  //   config.dateClick = (info) => this._handleDateClick(info);
-  //   config.eventClick = (info) => this._handleEventClick(info);
-
-  //   this.calendar = new Calendar(
-  //     this.shadowRoot!.getElementById("calendar")!,
-  //     config
-  //   );
-  //   this.calendar!.render();
-  //   this._fireViewChanged();
-  // }
-
-  // // Return if there are calendars that support creating events
-  // private get _hasMutableCalendars(): boolean {
-  //   return this.calendars.some((selCal) => {
-  //     const entityStateObj = this.hass.states[selCal.entity_id];
-  //     return (
-  //       entityStateObj &&
-  //       supportsFeature(entityStateObj, CalendarEntityFeature.CREATE_EVENT)
-  //     );
-  //   });
-  // }
-
-  // private _createEvent(_info) {
-  //   // Logic for selectedDate: In week and day view, use the start of the week or the selected day.
-  //   // If we are in month view, we only use the start of the month, if we are not showing the
-  //   // current actual month, as for that one the current day is automatically highlighted and
-  //   // defaulting to a different day in the event creation dialog would be weird.
-  //   showCalendarEventEditDialog(this, {
-  //     selectedDate:
-  //       this._activeView === "dayGridWeek" ||
-  //       this._activeView === "dayGridDay" ||
-  //       (this._activeView === "dayGridMonth" &&
-  //         this.calendar!.view.currentStart.getMonth() !== new Date().getMonth())
-  //         ? this.calendar!.view.currentStart
-  //         : undefined,
-  //     updated: () => {
-  //       this._fireViewChanged();
-  //     },
-  //   });
-  // }
-
-  // private _handleEventClick(info): void {
-  //   const entityStateObj = this.hass.states[info.event.extendedProps.calendar];
-  //   const canEdit =
-  //     entityStateObj &&
-  //     supportsFeature(entityStateObj, CalendarEntityFeature.UPDATE_EVENT);
-  //   const canDelete =
-  //     entityStateObj &&
-  //     supportsFeature(entityStateObj, CalendarEntityFeature.DELETE_EVENT);
-  //   showCalendarEventDetailDialog(this, {
-  //     calendarId: info.event.extendedProps.calendar,
-  //     entry: info.event.extendedProps.eventData,
-  //     color: info.event.backgroundColor,
-  //     updated: () => {
-  //       this._fireViewChanged();
-  //     },
-  //     canEdit: canEdit,
-  //     canDelete: canDelete,
-  //   });
-  // }
-
-  // private _handleDateClick(info): void {
-  //   if (info.view.type !== "dayGridMonth") {
-  //     return;
-  //   }
-  //   this._activeView = "dayGridDay";
-  //   this.calendar!.changeView("dayGridDay");
-  //   this.calendar!.gotoDate(info.dateStr);
-  //   this._fireViewChanged();
-  // }
-
-  // private _handleNext(): void {
-  //   this.calendar!.next();
-  //   this._fireViewChanged();
-  // }
-
-  // private _handlePrev(): void {
-  //   this.calendar!.prev();
-  //   this._fireViewChanged();
-  // }
-
-  // private _handleToday(): void {
-  //   this.calendar!.today();
-  //   this._fireViewChanged();
-  // }
-
-  // private _handleView(ev: CustomEvent): void {
-  //   this._activeView = ev.detail.value;
-  //   this.calendar!.changeView(this._activeView!);
-  //   this._fireViewChanged();
-  // }
-
-  // private _fireViewChanged(): void {
-  //   fireEvent(this, "view-changed", {
-  //     start: this.calendar!.view.activeStart,
-  //     end: this.calendar!.view.activeEnd,
-  //     view: this.calendar!.view.type,
-  //   });
-  // }
-
-  // // @TODO: Keep only week, maybe remove buttons completely?
-  // private _viewToggleButtons = memoize((views, localize: LocalizeFunc) => {
-  //   if (!this._viewButtons) {
-  //     this._viewButtons = [
-  //       {
-  //         label: localize(
-  //           "ui.panel.lovelace.editor.card.calendar.views.dayGridMonth"
-  //         ),
-  //         value: "dayGridMonth",
-  //         iconPath: mdiViewModule,
-  //       },
-  //       {
-  //         label: localize(
-  //           "ui.panel.lovelace.editor.card.calendar.views.dayGridWeek"
-  //         ),
-  //         value: "dayGridWeek",
-  //         iconPath: mdiViewWeek,
-  //       },
-  //       {
-  //         label: localize(
-  //           "ui.panel.lovelace.editor.card.calendar.views.dayGridDay"
-  //         ),
-  //         value: "dayGridDay",
-  //         iconPath: mdiViewDay,
-  //       },
-  //       {
-  //         label: localize(
-  //           "ui.panel.lovelace.editor.card.calendar.views.listWeek"
-  //         ),
-  //         value: "listWeek",
-  //         iconPath: mdiViewAgenda,
-  //       },
-  //     ];
-  //   }
-
-  //   return this._viewButtons.filter((button) =>
-  //     views.includes(button.value as FullCalendarView)
-  //   );
-  // });
-
-  // private _clearError() {
-  //   this.error = undefined;
-  // }
 
   static get styles(): CSSResultGroup {
     return [
