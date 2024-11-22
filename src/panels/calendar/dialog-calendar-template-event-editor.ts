@@ -53,6 +53,19 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     this._error = undefined;
     this._info = undefined;
     this._params = params;
+    if(params.entry){
+      const entry = params.entry!;
+      this._summary = entry.summary;
+      this._description = entry.description;
+      this._dtstart = entry.dtstart;
+      this._dtend = entry.dtend;
+    }
+    else {
+      this._summary = "";
+      this._description = "";
+      this._dtstart = "00:00:00";
+      this._dtend = "00:00:00";
+    }
 
     this._timeZone = resolveTimeZone(
       this.hass.locale.time_zone,
