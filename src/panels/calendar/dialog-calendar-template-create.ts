@@ -13,11 +13,10 @@ import type { CalendarViewChanged, HomeAssistant } from "../../types";
 // import { showCalendarEventDetailDialog } from "./show-dialog-calendar-event-detail";
 import { showCalendarEventEditTemplateDialog } from "./show-dialog-calendar-event-editor-template";
 import type { CalendarTemplateCreateDialogParams } from "./show-dialog-calendar-template-create";
-import type{ 
+import type {
   CalendarTemplateViewEventItem,
   CalendarTemplateEvents,
 } from "../../data/calendar";
-
 
 @customElement("dialog-calendar-template-create")
 export class DialogCalendarTemplateCreate extends LitElement {
@@ -106,8 +105,7 @@ export class DialogCalendarTemplateCreate extends LitElement {
         @closed=${this.closeDialog}
         scrimClickAction
         escapeKeyAction=${this.closeDialog}
-        .heading=${createCloseHeading(this.hass, "Create template"
-       )}
+        .heading=${createCloseHeading(this.hass, "Create template")}
         style="--dialog-content-padding: 24px; width: 1000px; max-width: 90%;"
       >
         <div id="calendar-container">
@@ -126,12 +124,12 @@ export class DialogCalendarTemplateCreate extends LitElement {
             <tbody>
               <tr>
                 ${["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
-                  (day) => {
-                    const dayEvents = this._calendarEvents.filter((event) =>
-                      this._convertIntDayToString(event.weekday_int).startsWith(
-                        day
-                      )
-                    );
+                    (day) => {
+                      const dayEvents = this._calendarEvents
+                        .filter((event) =>
+                          this._convertIntDayToString(event.weekday_int).startsWith(day)
+                        )
+                        .sort((a, b) => a.start_time.localeCompare(b.start_time)); // Sort by start_time
 
                     return html`
                       <td>
@@ -145,18 +143,13 @@ export class DialogCalendarTemplateCreate extends LitElement {
                                 </div>
                               `
                             )
-                          
-
-                          : html`
-                            <div class="no-events">No events</div>
-                            `}
+                          : html` <div class="no-events">No events</div> `}
                         <button
                           class="calendar-button"
-                            @click=${() => this._openModal(day)}
-                          >
-                            Add event
+                          @click=${() => this._openModal(day)}
+                        >
+                          Add event
                         </button>
-                            
                       </td>
                     `;
                   }
