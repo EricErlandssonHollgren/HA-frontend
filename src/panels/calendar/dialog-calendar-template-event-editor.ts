@@ -8,6 +8,7 @@ import "../../components/entity/state-info";
 import "../../components/ha-alert";
 import "../../components/ha-date-input";
 import "../../components/ha-time-input";
+import { createCloseHeading } from "../../components/ha-dialog";
 import { haStyleDialog } from "../../resources/styles";
 import type { CalendarViewChanged, HomeAssistant } from "../../types";
 import "../lovelace/components/hui-generic-entity-row";
@@ -75,8 +76,12 @@ class DialogCalendarTemplateEventEditor extends LitElement {
         open
         @closed=${this.closeDialog}
         scrimClickAction
-        escapeKeyAction=${this.closeDialog}
-        style="--dialog-content-padding: 24px; width: 1000px; max-width: 90%;"
+        escapeKeyAction
+       .heading=${createCloseHeading(this.hass,
+        this.hass.localize(
+          `ui.components.calendar.event.${"add"}`
+        )
+       )}
       >
         <div id="content">
           <ha-textfield
