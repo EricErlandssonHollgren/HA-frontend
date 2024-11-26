@@ -1,5 +1,6 @@
 import "@material/mwc-button";
 import { formatInTimeZone, toDate } from "date-fns-tz";
+import { mdiTrashCanOutline } from "@mdi/js";
 import {
   addDays,
   addHours,
@@ -26,7 +27,7 @@ import "../../components/ha-switch";
 import "../../components/ha-textarea";
 import "../../components/ha-textfield";
 import "../../components/ha-time-input";
-import type { CalendarEventMutableParams } from "../../data/calendar";
+import type { Attendee, CalendarEventMutableParams } from "../../data/calendar";
 import {
   CalendarEntityFeature,
   RecurrenceRange,
@@ -69,7 +70,8 @@ class DialogCalendarEventEditor extends LitElement {
 
   @state() private _submitting = false;
 
-  @state() private _attendees?: any[];
+  @state() private _attendees?: Attendee[];
+
   // Dates are displayed in the timezone according to the user's profile
   // which may be different from the Home Assistant timezone. When
   // events are persisted, they are relative to the Home Assistant
@@ -191,17 +193,28 @@ class DialogCalendarEventEditor extends LitElement {
             autogrow
           ></ha-textarea>
           <div class="attendees">
-            <span>Attendees</span>
-            ${this._attendees?.map(
-              (attendee) => html`
-                <ha-textfield
-                  .value=${attendee.email}
-                  .label=${"Attendee"}
-                  @change=${this._handleAttendeesChanged}
-                >
-                </ha-textfield>
-              `
-            )}
+            ${this._attendees?.length ? html`<span>Attendees</span>` : ""}
+            <div class="flex-col">
+              ${this._attendees?.map(
+                (attendee, index) => html`
+                  <div class="flex-row">
+                    <ha-icon-button
+                      .path=${mdiTrashCanOutline}
+                      @click=${this._onRemoveAttendee(index)}
+                    >
+                    </ha-icon-button>
+                    <ha-textfield
+                      class="flex-grow"
+                      name="attendee"
+                      .value=${attendee.email}
+                      .label=${"Attendee"}
+                      @input=${this._onAttendeeChange(index)}
+                    >
+                    </ha-textfield>
+                  </div>
+                `
+              )}
+            </div>
             <ha-button
               .label=${"Add attendee"}
               @click=${this._addAttendee}
@@ -329,6 +342,14 @@ class DialogCalendarEventEditor extends LitElement {
     })
   );
 
+  private _onRemoveAttendee = (index: number) => () => {
+    this._removeAttendee(index);
+  };
+
+  private _onAttendeeChange = (index: number) => (ev: Event) => {
+    this._handleAttendeesChanged(ev, index);
+  };
+
   // Formats a date in specified timezone, or defaulting to browser display timezone
   private _formatDate(date: Date, timeZone: string = this._timeZone!): string {
     return formatInTimeZone(date, timeZone, "yyyy-MM-dd");
@@ -357,28 +378,32 @@ class DialogCalendarEventEditor extends LitElement {
   }
 
   private _addAttendee() {
-    const newAttendee = {
-      comment: null,
-      display_name: null,
+    const newAttendee: Attendee = {
+      comment: undefined,
+      display_name: undefined,
       email: "",
-      id: null,
+      id: undefined,
       optional: false,
       response_status: "",
     };
     this._attendees = [...(this._attendees ?? []), newAttendee];
   }
 
-  private _handleAttendeesChanged(ev: Event): void {
+  private _removeAttendee(index: number): void {
+    this._attendees = this._attendees?.filter((_, i) => i !== index);
+  }
+
+  private _handleAttendeesChanged(ev: Event, index: number): void {
     const target = ev.target as HTMLInputElement;
     const newValue = target.value;
-    const index = this._attendees?.findIndex(
-      (attendee) => attendee === target.value
-    );
 
-    if (index !== undefined && index !== -1) {
-      // Create a new array to trigger reactivity
-      this._attendees = [...(this._attendees ?? [])];
-      this._attendees[index] = newValue;
+    if (this._attendees) {
+      const updatedAttendees = [...this._attendees];
+      updatedAttendees[index] = {
+        ...updatedAttendees[index],
+        email: newValue,
+      };
+      this._attendees = updatedAttendees;
     }
   }
 
@@ -675,6 +700,22 @@ class DialogCalendarEventEditor extends LitElement {
         .flex {
           display: flex;
           justify-content: space-between;
+        }
+        .flex-col {
+          display: flex;
+          flex-direction: column;
+        }
+        .flex-row {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+        }
+        .flex-grow {
+          flex-grow: 1;
+        }
+        .attendee-button {
+          height: 64px;
         }
         .label {
           font-size: 12px;
