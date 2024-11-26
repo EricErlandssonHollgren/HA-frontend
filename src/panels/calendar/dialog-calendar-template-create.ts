@@ -42,13 +42,15 @@ export class DialogCalendarTemplateCreate extends LitElement {
   }
 
   private _onOpenEventModal =
-    (day: string, event?: CalendarTemplateViewEventItem) => () => {
-      this._openEventModal(day, event);
+    (day: string, event?: CalendarTemplateViewEventItem, index?: number) =>
+    () => {
+      this._openEventModal(day, event, index);
     };
 
   private _openEventModal(
     day: string,
-    event?: CalendarTemplateViewEventItem
+    event?: CalendarTemplateViewEventItem,
+    index?: number
   ): void {
     showCalendarEventEditTemplateDialog(this, {
       updated: (events: CalendarTemplateViewEventItem[]) => {
@@ -56,6 +58,7 @@ export class DialogCalendarTemplateCreate extends LitElement {
       },
       day,
       entry: event,
+      index: index,
     });
     // console.log(day);
     // console.log(event.summary);
@@ -156,10 +159,14 @@ export class DialogCalendarTemplateCreate extends LitElement {
                       <td>
                         ${dayEvents.length > 0
                           ? dayEvents.map(
-                              (event) => html`
+                              (event, index) => html`
                                 <button
                                   class="event-button"
-                                  @click=${this._onOpenEventModal(day, event)}
+                                  @click=${this._onOpenEventModal(
+                                    day,
+                                    event,
+                                    index
+                                  )}
                                 >
                                   <div class="event">
                                     <strong>${event.summary}</strong><br />

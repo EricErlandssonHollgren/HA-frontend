@@ -146,7 +146,10 @@ class DialogCalendarTemplateEventEditor extends LitElement {
               ></ha-time-input>
             </div>
           </div>
-          <mwc-button slot="primaryAction" @click=${this._saveEvent}>
+          <mwc-button
+            slot="primaryAction"
+            @click=${this._onSaveEvent(isCreate)}
+          >
             ${this.hass.localize("ui.components.calendar.event.save")}
           </mwc-button>
         </div>
@@ -154,7 +157,11 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     `;
   }
 
-  private _saveEvent(): void {
+  private _onSaveEvent = (isCreate: boolean) => () => {
+    this._saveEvent(isCreate);
+  };
+
+  private _saveEvent(isCreate: boolean): void {
     // Validate required fields
     if (this._summary && this._dtstart && this._dtend) {
       // Add the new event to the calendar
@@ -165,15 +172,23 @@ class DialogCalendarTemplateEventEditor extends LitElement {
         end_time: this._dtend,
         description: this._description || undefined,
       };
-
-      this._calendarEvents = [...this._calendarEvents, newEvent];
-      // console.log(
-      //   "Updated calendar events state:",
-      //   this._calendarEvents
-      // );
-      // Emit an event with the updated events
-      this._params?.updated(this._calendarEvents);
-
+      if (isCreate) {
+        this._calendarEvents = [...this._calendarEvents, newEvent];
+        // Emit an event with the updated events
+        this._params?.updated(this._calendarEvents);
+      } else {
+        const i = this._params?.index;
+        if (i !== undefined && i >= 0 && i < this._calendarEvents.length) {
+          this._calendarEvents = [
+            ...this._calendarEvents.slice(0, i),
+            newEvent,
+            ...this._calendarEvents.slice(i + 1),
+          ];
+          this._params?.updated(this._calendarEvents);
+        } else {
+          alert("The index is undefined");
+        }
+      }
       this.closeDialog();
     } else {
       alert(

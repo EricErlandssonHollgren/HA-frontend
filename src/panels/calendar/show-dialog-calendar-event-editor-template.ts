@@ -8,6 +8,7 @@ export interface CalendarEventEditTemplateDialogParams {
   canDelete?: boolean;
   updated: (events: CalendarTemplateViewEventItem[]) => void;
   day: string;
+  index?: number;
 }
 
 export const loadCalendarEventEditTemplateDialog = () =>
