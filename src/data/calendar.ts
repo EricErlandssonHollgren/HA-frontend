@@ -43,8 +43,7 @@ export interface CalendarEventMutableParams {
 
 export interface CalendarTemplateEvents {
   template_events: CalendarEventMutableParams[];
-  // template_name: string; Commenting out to not mess up for my team<3
-  // template_creation_date: string;
+  template_name: string;
 }
 
 export interface CalendarTemplateViewEventItem {
@@ -57,7 +56,8 @@ export interface CalendarTemplateViewEventItem {
 
 export interface CalendarTemplateViewFullTemplate {
   template_id: string;
-  template_view_events: CalendarTemplateViewEventItem[]
+  template_name: string;
+  template_view_events: CalendarTemplateViewEventItem[];
 }
 
 // The scope of a delete/update for a recurring event

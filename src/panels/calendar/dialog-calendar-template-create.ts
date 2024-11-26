@@ -12,9 +12,11 @@ import type { CalendarViewChanged, HomeAssistant } from "../../types";
 // import { showCalendarEventDetailDialog } from "./show-dialog-calendar-event-detail";
 import { showCalendarEventEditTemplateDialog } from "./show-dialog-calendar-event-editor-template";
 import type { CalendarTemplateCreateDialogParams } from "./show-dialog-calendar-template-create";
-import type{ 
+import{ 
   CalendarTemplateViewEventItem,
   CalendarTemplateEvents,
+  CalendarTemplateViewFullTemplate,
+  fetchCalendarTemplates
 } from "../../data/calendar";
 
 
@@ -26,10 +28,13 @@ export class DialogCalendarTemplateCreate extends LitElement {
 
   @state() private _calendarEvents: CalendarTemplateViewEventItem[] = [];
 
+  @state() private _calendarTemplates: CalendarTemplateViewFullTemplate[] = [];
+  
   public async showDialog(
     params: CalendarTemplateCreateDialogParams
   ): Promise<void> {
     this._params = params;
+    this._calendarTemplates = (await fetchCalendarTemplates(this.hass, params.calendars)).templates
   }
 
   private closeDialog(): void {
@@ -53,9 +58,6 @@ export class DialogCalendarTemplateCreate extends LitElement {
   private _updateCalendarEvents(events: CalendarTemplateViewEventItem[]): void {
     // Update the internal state
     this._calendarEvents = events;
-
-    // Log for debugging purposes
-    console.log("Calendar events updated hejhej:", events);
   }
 
   // Accepts a Date object or date string that is recognized by the Date.parse() method
@@ -107,56 +109,76 @@ export class DialogCalendarTemplateCreate extends LitElement {
         escapeKeyAction=${this.closeDialog}
         style="--dialog-content-padding: 24px; width: 1000px; max-width: 90%;"
       >
-        <div id="calendar-container">
-          <table class="custom-calendar">
-            <thead>
-              <tr>
-                <th>MON</th>
-                <th>TUE</th>
-                <th>WED</th>
-                <th>THU</th>
-                <th>FRI</th>
-                <th>SAT</th>
-                <th>SUN</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                ${["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
-                  (day) => {
-                    const dayEvents = this._calendarEvents.filter((event) =>
-                      this._convertIntDayToString(event.weekday_int).startsWith(
-                        day
-                      )
-                    );
-
-                    return html`
-                      <td>
-                        ${dayEvents.length > 0
-                          ? dayEvents.map(
-                              (event) => html`
-                                <div class="event">
-                                  <strong>${event.summary}</strong><br />
-                                  ${event.start_time} - ${event.end_time}<br />
-                                  ${event.description || ""}
-                                </div>
-                              `
-                            )
-                          : html`
-                              <button
-                                class="calendar-button"
-                                @click=${() => this._openModal(day)}
-                              >
-                                Add event
-                              </button>
-                            `}
-                      </td>
-                    `;
-                  }
-                )}
-              </tr>
-            </tbody>
-          </table>
+        <div id="calendar-container" style="display: flex; padding: 16px;">
+          <div id="template-sidebar" style="width: 250px; border-right: 1px solid var(--divider-color); padding: 16px;">
+          <h3>Templates</h3>
+          <ul style="list-style: none; padding: 0;">
+            ${this._calendarTemplates.map(
+              (template) => html`
+                <li style="margin-bottom: 8px;">
+                  <button
+                    @click=${() => this._updateCalendarEvents(template.template_view_events)}
+                  >
+                    ${template.template_name}
+                  </button>
+                </li>
+              `
+            )}
+          </ul>
+          </div>
+          <div>
+            <table class="custom-calendar">
+              <thead>
+                <tr>
+                  <th>MON</th>
+                  <th>TUE</th>
+                  <th>WED</th>
+                  <th>THU</th>
+                  <th>FRI</th>
+                  <th>SAT</th>
+                  <th>SUN</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  ${["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
+                    (day) => {
+                      let dayEvents: CalendarTemplateViewEventItem[] = []
+                      if(this._calendarEvents) {
+                        dayEvents = this._calendarEvents.filter((event) =>
+                        this._convertIntDayToString(event.weekday_int).startsWith(
+                          day
+                        )
+                      );
+                    }
+                      return html`
+                        <td>
+                          ${dayEvents.length > 0
+                            ? dayEvents.map(
+                                (event) => html`
+                                  <div class="event">
+                                    <strong>${event.summary}</strong><br />
+                                    ${event.start_time} - ${event.end_time}<br />
+                                    ${event.description || ""}
+                                  </div>
+                                `
+                              )
+                            : html`
+                                <button
+                                  class="calendar-button"
+                                  @click=${() => this._openModal(day)}
+                                >
+                                  Add event
+                                </button>
+                              `}
+                        </td>
+                      `;
+                    }
+                  )}
+                </tr>
+              </tbody>
+            </table>
+            </div>
         </div>
       </ha-dialog>
     `;
@@ -251,6 +273,10 @@ export class DialogCalendarTemplateCreate extends LitElement {
         ha-alert {
           display: block;
           margin: 4px 0;
+        }
+
+        .calendar-container {
+          display: flex
         }
 
         #calendar {
