@@ -1,20 +1,18 @@
 import { fireEvent } from "../../common/dom/fire_event";
-import type { CalendarEventData, CalendarTemplateViewEventItem } from "../../data/calendar";
+import type { CalendarTemplateViewEventItem } from "../../data/calendar";
 
 export interface CalendarEventEditTemplateDialogParams {
-//   calendarId?: string;
+  //   calendarId?: string;
   selectedDate?: Date; // When provided is used as the pre-filled date for the event creation dialog
-  entry?: CalendarEventData;
+  entry?: CalendarTemplateViewEventItem;
   canDelete?: boolean;
   updated: (events: CalendarTemplateViewEventItem[]) => void;
   day: string;
 }
 
-export const loadCalendarEventEditTemplateDialog = () => {
-  console.log("Loading dialog-calendar-template-event...");
-  return import("./dialog-calendar-template-event-editor");
-};
-
+export const loadCalendarEventEditTemplateDialog = () =>
+  // console.log("Loading dialog-calendar-template-event...");
+  import("./dialog-calendar-template-event-editor");
 
 export const showCalendarEventEditTemplateDialog = (
   element: HTMLElement,
