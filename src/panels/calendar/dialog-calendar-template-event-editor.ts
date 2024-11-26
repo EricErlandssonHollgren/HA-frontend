@@ -46,21 +46,19 @@ class DialogCalendarTemplateEventEditor extends LitElement {
   // timezone, but floating without a timezone.
   private _timeZone?: string;
 
-
   public async showDialog(
     params: CalendarEventEditTemplateDialogParams
   ): Promise<void> {
     this._error = undefined;
     this._info = undefined;
     this._params = params;
-    if(params.entry){
+    if (params.entry) {
       const entry = params.entry!;
       this._summary = entry.summary;
       this._description = entry.description;
-      this._dtstart = entry.dtstart;
-      this._dtend = entry.dtend;
-    }
-    else {
+      this._dtstart = entry.start_time;
+      this._dtend = entry.end_time;
+    } else {
       this._summary = "";
       this._description = "";
       this._dtstart = "00:00:00";
@@ -71,18 +69,18 @@ class DialogCalendarTemplateEventEditor extends LitElement {
       this.hass.locale.time_zone,
       this.hass.config.time_zone
     );
- }
+  }
 
   private closeDialog(): void {
     this._params = undefined;
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
 
-
   protected render() {
     if (!this._params) {
       return nothing;
     }
+    const isCreate = this._params.entry === undefined;
 
     return html`
       <ha-dialog
@@ -90,11 +88,12 @@ class DialogCalendarTemplateEventEditor extends LitElement {
         @closed=${this.closeDialog}
         scrimClickAction
         escapeKeyAction
-       .heading=${createCloseHeading(this.hass,
-        this.hass.localize(
-          `ui.components.calendar.event.${"add"}`
-        )
-       )}
+        .heading=${createCloseHeading(
+          this.hass,
+          this.hass.localize(
+            `ui.components.calendar.event.${isCreate ? "add" : "edit"}`
+          )
+        )}
       >
         <div id="content">
           <ha-textfield
@@ -128,11 +127,11 @@ class DialogCalendarTemplateEventEditor extends LitElement {
               )}:</span
             >
             <div class="flex">
-                <ha-time-input
-                    .value=${this._dtstart}
-                    .locale=${this.hass.locale}
-                    @value-changed=${this._startTimeChanged}
-                  ></ha-time-input>
+              <ha-time-input
+                .value=${this._dtstart}
+                .locale=${this.hass.locale}
+                @value-changed=${this._startTimeChanged}
+              ></ha-time-input>
             </div>
           </div>
           <div>
@@ -140,11 +139,11 @@ class DialogCalendarTemplateEventEditor extends LitElement {
               >${this.hass.localize("ui.components.calendar.event.end")}:</span
             >
             <div class="flex">
-                <ha-time-input
-                    .value=${this._dtend}
-                    .locale=${this.hass.locale}
-                    @value-changed=${this._endTimeChanged}
-                  ></ha-time-input>
+              <ha-time-input
+                .value=${this._dtend}
+                .locale=${this.hass.locale}
+                @value-changed=${this._endTimeChanged}
+              ></ha-time-input>
             </div>
           </div>
           <mwc-button slot="primaryAction" @click=${this._saveEvent}>
@@ -168,10 +167,10 @@ class DialogCalendarTemplateEventEditor extends LitElement {
       };
 
       this._calendarEvents = [...this._calendarEvents, newEvent];
-      console.log(
-        "Updated calendar events state:",
-        this._calendarEvents
-      );
+      // console.log(
+      //   "Updated calendar events state:",
+      //   this._calendarEvents
+      // );
       // Emit an event with the updated events
       this._params?.updated(this._calendarEvents);
 

@@ -41,21 +41,40 @@ export class DialogCalendarTemplateCreate extends LitElement {
     super.connectedCallback();
   }
 
-  private _openModal(day: string): void {
+  private _onOpenEventModal =
+    (day: string, event?: CalendarTemplateViewEventItem) => () => {
+      this._openEventModal(day, event);
+    };
+
+  private _openEventModal(
+    day: string,
+    event?: CalendarTemplateViewEventItem
+  ): void {
     showCalendarEventEditTemplateDialog(this, {
       updated: (events: CalendarTemplateViewEventItem[]) => {
         this._updateCalendarEvents(events);
       },
       day,
+      entry: event,
     });
+    // console.log(day);
+    // console.log(event.summary);
   }
+
+  // private _onOpenEditModal(day:string, event: CalendarTemplateViewEventItem) => () => {
+  //   this._openEditModal(day,event);
+  // }
+
+  // private _openEditModal(day:string, event: CalendarTemplateViewEventItem) : void{
+  //   console.log(event.summary)
+  // }
 
   private _updateCalendarEvents(events: CalendarTemplateViewEventItem[]): void {
     // Update the internal state
     this._calendarEvents = events;
 
     // Log for debugging purposes
-    console.log("Calendar events updated hejhej:", events);
+    // console.log("Calendar events updated hejhej:", events);
   }
 
   // Accepts a Date object or date string that is recognized by the Date.parse() method
@@ -124,31 +143,36 @@ export class DialogCalendarTemplateCreate extends LitElement {
             <tbody>
               <tr>
                 ${["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
-                    (day) => {
-                      const dayEvents = this._calendarEvents
-                        .filter((event) =>
-                          this._convertIntDayToString(event.weekday_int).startsWith(day)
-                        )
-                        .sort((a, b) => a.start_time.localeCompare(b.start_time)); // Sort by start_time
+                  (day) => {
+                    const dayEvents = this._calendarEvents
+                      .filter((event) =>
+                        this._convertIntDayToString(
+                          event.weekday_int
+                        ).startsWith(day)
+                      )
+                      .sort((a, b) => a.start_time.localeCompare(b.start_time)); // Sort by start_time
 
                     return html`
                       <td>
                         ${dayEvents.length > 0
                           ? dayEvents.map(
                               (event) => html`
-                              <button>
-                                <div class="event">
-                                  <strong>${event.summary}</strong><br />
-                                  ${event.start_time} - ${event.end_time}<br />
-                                  ${event.description || ""}
-                                </div>
-                              </button>
+                                <button
+                                  class="event-button"
+                                  @click=${this._onOpenEventModal(day, event)}
+                                >
+                                  <div class="event">
+                                    <strong>${event.summary}</strong><br />
+                                    ${event.start_time} - ${event.end_time}<br />
+                                    ${event.description || ""}
+                                  </div>
+                                </button>
                               `
                             )
                           : html` <div class="no-events">No events</div> `}
                         <button
                           class="calendar-button"
-                          @click=${() => this._openModal(day)}
+                          @click=${this._onOpenEventModal(day)}
                         >
                           Add event
                         </button>
