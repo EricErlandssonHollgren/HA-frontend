@@ -45,6 +45,7 @@ export class DialogCalendarTemplateCreate extends LitElement {
   }
 
   private closeDialog(): void {
+    this._calendarEvents = [];
     this._params = undefined;
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
@@ -246,6 +247,7 @@ export class DialogCalendarTemplateCreate extends LitElement {
                 (template) => html`
                   <li>
                     <button
+                      class="template-button"
                       @click=${this._onUpdateCalendarEvents(
                         template.template_view_events
                       )}
@@ -394,6 +396,25 @@ export class DialogCalendarTemplateCreate extends LitElement {
 
         .template-list li {
           margin-bottom: 8px;
+        }
+        .template-button {
+          margin-top: 8px;
+          font:
+            15px Roboto,
+            sans-serif;
+          font-weight: 500;
+          width: 100px;
+          height: 40px;
+          border: 1px;
+          border-radius: 4px;
+          box-sizing: border-box;
+          background-color: white;
+          color: #03a9fa;
+          cursor: pointer;
+        }
+        .template-button:hover {
+          background-color: rgba(0, 174, 248, 0.08);
+          cursor: pointer;
         }
 
         th {
