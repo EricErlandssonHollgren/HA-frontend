@@ -15,9 +15,15 @@ import type { CalendarTemplateCreateDialogParams } from "./show-dialog-calendar-
 import type {
   CalendarTemplateViewEventItem,
   CalendarTemplateEvents,
+  Calendar,
+  CalendarEventMutableParams,
   CalendarTemplateViewFullTemplate,
 } from "../../data/calendar";
-import { fetchCalendarTemplates } from "../../data/calendar";
+import { showCalendarTemplateApplyDialog } from "./show-dialog-calendar-template-apply";
+import {
+  applyCalendarTemplate,
+  fetchCalendarTemplates,
+} from "../../data/calendar";
 
 @customElement("dialog-calendar-template-create")
 export class DialogCalendarTemplateCreate extends LitElement {
@@ -72,6 +78,111 @@ export class DialogCalendarTemplateCreate extends LitElement {
       entry: event,
       index: index,
       canDelete: canDelete,
+    });
+  }
+
+  private _onOpenApplyModal = (calendars: Calendar[] | undefined) => () => {
+    this._openApplyModal(calendars);
+  };
+
+  private _openApplyModal(calendars: Calendar[] | undefined): void {
+    if (!calendars) {
+      throw Error();
+    }
+    showCalendarTemplateApplyDialog(this, {
+      onSave: (
+        selectedCalendars: string[],
+        templateName: string,
+        week: number,
+        rrule?: string
+      ) => {
+        this._applyCalendarTemplate(
+          selectedCalendars,
+          templateName,
+          week,
+          rrule
+        );
+      },
+      calendars,
+    });
+  }
+
+  private _applyCalendarTemplate(
+    selectedCalendars: string[],
+    templateName: string,
+    week: number,
+    rrule?: string
+  ): void {
+    // Update the internal state
+    const eventsToSend: CalendarEventMutableParams[] = [];
+    this._calendarEvents.forEach((ev) => {
+      if (ev.weekday_int < 0 || ev.weekday_int > 6) {
+        throw new Error(
+          "weekdayInt must be between 0 (Monday) and 6 (Sunday)."
+        );
+      }
+
+      if (week < 1 || week > 53) {
+        throw new Error("week must be between 1 and 53.");
+      }
+
+      // Start of the year
+      const startOfYear = new Date(Date.UTC(2024, 0, 1));
+
+      // Get ISO day of the week for January 1st (0 = Sunday, 6 = Saturday)
+      const startDayOfWeek = startOfYear.getUTCDay();
+
+      // Adjust to ISO standard (0 for Sunday -> 7 for Sunday)
+      const adjustedStartDay = startDayOfWeek === 0 ? 7 : startDayOfWeek;
+
+      // Calculate the first Monday of the year
+      const firstMonday = new Date(startOfYear);
+      firstMonday.setUTCDate(firstMonday.getUTCDate() + (1 - adjustedStartDay));
+
+      // Calculate the desired week and day
+      const targetDate = new Date(firstMonday);
+      targetDate.setUTCDate(
+        targetDate.getUTCDate() + (week - 1) * 7 + ev.weekday_int
+      );
+
+      const [startHours, startMinutes, startSeconds] = ev.start_time
+        .split(":")
+        .map((part) => parseInt(part, 10));
+
+      // Create a new Date object based on the targetDate
+      const startDatetime = new Date(targetDate);
+
+      // Set the hours, minutes, and seconds
+      startDatetime.setHours(startHours, startMinutes, startSeconds, 0);
+
+      const [endHours, endMinutes, endSeconds] = ev.end_time
+        .split(":")
+        .map((part) => parseInt(part, 10));
+
+      // Create a new Date object based on the targetDate
+      const endDatetime = new Date(targetDate);
+
+      // Set the hours, minutes, and seconds
+      endDatetime.setHours(endHours, endMinutes, endSeconds, 0);
+
+      const newEvent: CalendarEventMutableParams = {
+        summary: ev.summary,
+        dtstart: startDatetime.toISOString(),
+        dtend: endDatetime.toISOString(),
+        rrule: rrule,
+        description: ev.description ?? "",
+      };
+
+      eventsToSend.push(newEvent);
+    });
+
+    selectedCalendars.forEach(async (calendarId) => {
+      const template: CalendarTemplateEvents = {
+        template_events: eventsToSend,
+        template_name: templateName,
+      };
+
+      await applyCalendarTemplate(this.hass!, calendarId, template);
     });
   }
 
@@ -211,6 +322,12 @@ export class DialogCalendarTemplateCreate extends LitElement {
             </table>
           </div>
         </div>
+        <button
+          class="calendar-button"
+          @click=${this._onOpenApplyModal(this._params?.calendars)}
+        >
+          Specify template
+        </button>
       </dialog>
     `;
   }
@@ -336,7 +453,6 @@ export class DialogCalendarTemplateCreate extends LitElement {
     ];
   }
 }
-
 declare global {
   interface HTMLElementTagNameMap {
     "dialog-calendar-template-create": DialogCalendarTemplateCreate;
