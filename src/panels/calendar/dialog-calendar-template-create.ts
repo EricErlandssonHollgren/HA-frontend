@@ -325,10 +325,7 @@ export class DialogCalendarTemplateCreate extends LitElement {
           </div>
         </div>
         <div class="footer">
-          <button
-            class="calendar-button"
-            @click=${this._onOpenApplyModal(this._params?.calendars)}
-          >
+          <button @click=${this._onOpenApplyModal(this._params?.calendars)}>
             SPECIFY TEMPLATE
           </button>
         </div>
@@ -378,10 +375,10 @@ export class DialogCalendarTemplateCreate extends LitElement {
           flex-direction: row;
         }
         .template-sidebar {
-          width: 100px;
+          width: 150px;
           height: 100%;
           border-right: 1px solid;
-          padding: 16px;
+          padding-right: 16px;
           margin-right: 16px;
           text-align: center;
           padding-top: 0;
@@ -403,17 +400,17 @@ export class DialogCalendarTemplateCreate extends LitElement {
             15px Roboto,
             sans-serif;
           font-weight: 500;
-          width: 100px;
+          width: 150px;
           height: 40px;
           border: 1px;
           border-radius: 4px;
           box-sizing: border-box;
-          background-color: white;
+          background-color: rgba(0, 174, 248, 0.08);
           color: #03a9fa;
           cursor: pointer;
         }
         .template-button:hover {
-          background-color: rgba(0, 174, 248, 0.08);
+          background-color: #cceffe;
           cursor: pointer;
         }
 
