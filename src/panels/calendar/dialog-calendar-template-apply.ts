@@ -19,6 +19,7 @@ import type { CalendarTemplateApplyDialogParams } from "./show-dialog-calendar-t
 import "../../components/entity/ha-entity-picker";
 import type { HaListItem } from "../../components/ha-list-item";
 import { stopPropagation } from "../../common/dom/stop_propagation";
+import { createCloseHeading } from "../../components/ha-dialog";
 
 class DialogCalendarTemplateApply extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
@@ -89,11 +90,11 @@ class DialogCalendarTemplateApply extends LitElement {
 
     return html`
       <ha-dialog
-        open
+        .open=${Boolean(this._params)}
         @closed=${this.closeDialog}
         scrimClickAction
         escapeKeyAction=${this.closeDialog}
-        .heading=${"Enter Template Details"}
+        .heading=${createCloseHeading(this.hass, "Enter template details")}
       >
         <div class="content">
           <ha-textfield

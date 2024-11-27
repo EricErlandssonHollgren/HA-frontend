@@ -116,34 +116,34 @@ class DialogCalendarTemplateEventEditor extends LitElement {
             @change=${this._handleDescriptionChanged}
             autogrow
           ></ha-textarea>
-          <ha-formfield
-            .label=${this.hass.localize("ui.components.calendar.event.all_day")}
-          >
-          </ha-formfield>
-          <div>
-            <span class="label"
-              >${this.hass.localize(
-                "ui.components.calendar.event.start"
-              )}:</span
-            >
-            <div class="flex">
-              <ha-time-input
-                .value=${this._dtstart}
-                .locale=${this.hass.locale}
-                @value-changed=${this._startTimeChanged}
-              ></ha-time-input>
+          <div class="time">
+            <div>
+              <span class="label"
+                >${this.hass.localize(
+                  "ui.components.calendar.event.start"
+                )}:</span
+              >
+              <div class="flex">
+                <ha-time-input
+                  .value=${this._dtstart}
+                  .locale=${this.hass.locale}
+                  @value-changed=${this._startTimeChanged}
+                ></ha-time-input>
+              </div>
             </div>
-          </div>
-          <div>
-            <span class="label"
-              >${this.hass.localize("ui.components.calendar.event.end")}:</span
-            >
-            <div class="flex">
-              <ha-time-input
-                .value=${this._dtend}
-                .locale=${this.hass.locale}
-                @value-changed=${this._endTimeChanged}
-              ></ha-time-input>
+            <div>
+              <span class="label"
+                >${this.hass.localize(
+                  "ui.components.calendar.event.end"
+                )}:</span
+              >
+              <div class="flex">
+                <ha-time-input
+                  .value=${this._dtend}
+                  .locale=${this.hass.locale}
+                  @value-changed=${this._endTimeChanged}
+                ></ha-time-input>
+              </div>
             </div>
           </div>
           <div class="footer">
@@ -324,8 +324,12 @@ class DialogCalendarTemplateEventEditor extends LitElement {
           margin-top: 16px;
         }
         .flex {
+          margin-right: 8px;
+        }
+        .time {
           display: flex;
-          justify-content: space-between;
+          flex-direction: row;
+          justify-content: start;
         }
         .label {
           font-size: 12px;

@@ -311,7 +311,7 @@ export class DialogCalendarTemplateCreate extends LitElement {
                             class="calendar-button"
                             @click=${this._onOpenEventModal(day)}
                           >
-                            ADD EVENT
+                            + ADD EVENT
                           </button>
                         </td>
                       `;
@@ -322,12 +322,14 @@ export class DialogCalendarTemplateCreate extends LitElement {
             </table>
           </div>
         </div>
-        <button
-          class="calendar-button"
-          @click=${this._onOpenApplyModal(this._params?.calendars)}
-        >
-          Specify template
-        </button>
+        <div class="footer">
+          <button
+            class="calendar-button"
+            @click=${this._onOpenApplyModal(this._params?.calendars)}
+          >
+            SPECIFY TEMPLATE
+          </button>
+        </div>
       </dialog>
     `;
   }
@@ -337,6 +339,8 @@ export class DialogCalendarTemplateCreate extends LitElement {
       haStyle,
       css`
         .full-dialog {
+          display: flex;
+          flex-direction: column;
           z-index: 8;
           width: fit-content;
           height: 90%;
@@ -367,12 +371,13 @@ export class DialogCalendarTemplateCreate extends LitElement {
           border-collapse: collapse;
         }
         .calendar-container {
-          display: flex;
           height: inherit;
+          display: flex;
+          flex-direction: row;
         }
         .template-sidebar {
           width: 100px;
-          height: 90%;
+          height: 100%;
           border-right: 1px solid;
           padding: 16px;
           margin-right: 16px;
@@ -432,15 +437,15 @@ export class DialogCalendarTemplateCreate extends LitElement {
           width: 100px;
           height: 40px;
           border: 1px;
-          border-radius: 30px;
+          border-radius: 4px;
           box-sizing: border-box;
-          background-color: #03a9fa;
-          color: white;
+          background-color: white;
+          color: #03a9fa;
           cursor: pointer;
         }
         button.calendar-button:hover {
+          background-color: rgba(0, 174, 248, 0.08);
           cursor: pointer;
-          background-color: #0491d8;
         }
 
         div.no-events {
@@ -462,6 +467,30 @@ export class DialogCalendarTemplateCreate extends LitElement {
           flex-direction: row;
           justify-content: space-between;
           padding: 0 24px 12px;
+        }
+        .footer {
+          display: flex;
+          justify-content: end;
+          padding: 4px;
+        }
+        .footer button {
+          margin: 8px;
+          font:
+            13px Roboto,
+            sans-serif;
+          width: 200px;
+          font-weight: 500;
+          height: 40px;
+          border: 1px;
+          border-radius: 30px;
+          box-sizing: border-box;
+          background-color: #03a9fa;
+          color: white;
+          cursor: pointer;
+        }
+        .footer button:hover {
+          cursor: pointer;
+          background-color: #0491d8;
         }
       `,
     ];
