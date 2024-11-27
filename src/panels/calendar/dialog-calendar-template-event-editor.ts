@@ -146,15 +146,53 @@ class DialogCalendarTemplateEventEditor extends LitElement {
               ></ha-time-input>
             </div>
           </div>
-          <mwc-button
-            slot="primaryAction"
-            @click=${this._onSaveEvent(isCreate)}
-          >
-            ${this.hass.localize("ui.components.calendar.event.save")}
-          </mwc-button>
+          ${isCreate
+            ? html`
+                <mwc-button
+                  slot="primaryAction"
+                  @click=${this._onSaveEvent(isCreate)}
+                >
+                  ${this.hass.localize("ui.components.calendar.event.add")}
+                </mwc-button>
+              `
+            : html`
+                <mwc-button
+                  slot="primaryAction"
+                  @click=${this._onSaveEvent(isCreate)}
+                >
+                  ${this.hass.localize("ui.components.calendar.event.save")}
+                </mwc-button>
+                ${this._params.canDelete
+                  ? html`
+                      <mwc-button
+                        slot="secondaryAction"
+                        class="warning"
+                        @click=${this._deleteEvent}
+                      >
+                        ${this.hass.localize(
+                          "ui.components.calendar.event.delete"
+                        )}
+                      </mwc-button>
+                    `
+                  : ""}
+              `}
         </div>
       </ha-dialog>
     `;
+  }
+
+  private _deleteEvent() {
+    const i = this._params?.index;
+    if (i !== undefined && i >= 0 && i < this._calendarEvents.length) {
+      this._calendarEvents = [
+        ...this._calendarEvents.slice(0, i),
+        ...this._calendarEvents.slice(i + 1),
+      ];
+      this._params?.updated(this._calendarEvents);
+      this.closeDialog();
+    } else {
+      alert("The index is undefined");
+    }
   }
 
   private _onSaveEvent = (isCreate: boolean) => () => {
