@@ -177,14 +177,23 @@ export class DialogCalendarTemplateCreate extends LitElement {
       eventsToSend.push(newEvent);
     });
 
+    const templateId = this._generateId();
+
     selectedCalendars.forEach(async (calendarId) => {
       const template: CalendarTemplateEvents = {
         template_events: eventsToSend,
         template_name: templateName,
+        template_id: templateId,
       };
 
       await applyCalendarTemplate(this.hass!, calendarId, template);
     });
+  }
+
+  private _generateId(): string {
+    const timestamp = Date.now().toString(36); // Convert current timestamp to base36
+    const randomNum = Math.random().toString(36).slice(2, 11); // Generate a random base36 string
+    return `${timestamp}-${randomNum}`;
   }
 
   private _onUpdateCalendarEvents =

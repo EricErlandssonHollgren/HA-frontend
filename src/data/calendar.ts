@@ -44,6 +44,7 @@ export interface CalendarEventMutableParams {
 export interface CalendarTemplateEvents {
   template_events: CalendarEventMutableParams[];
   template_name: string;
+  template_id: string;
 }
 
 export interface CalendarTemplateViewEventItem {
@@ -240,21 +241,27 @@ export const fetchCalendarTemplates = async (
       )
     );
   });
-  const templateList: CalendarTemplateViewFullTemplate[] = [];
 
-  let result: CalendarTemplateViewFullTemplate[];
+  const templateMap = new Map<string, CalendarTemplateViewFullTemplate>();
+
   for (const [idx, promise] of promises.entries()) {
     try {
       // eslint-disable-next-line no-await-in-loop
-      result = await promise;
+      const result = await promise;
+
+      // Add templates to the map to filter duplicates
+      result.forEach((template) => {
+        if (!templateMap.has(template.template_id)) {
+          templateMap.set(template.template_id, template);
+        }
+      });
     } catch (err) {
       errors.push(calendars[idx].entity_id);
-      continue;
     }
-    result.forEach((template) => {
-      templateList.push(template);
-    });
   }
+
+  // Convert map values back to an array
+  const templateList = Array.from(templateMap.values());
 
   return { templates: templateList, errors };
 };
