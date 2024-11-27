@@ -170,7 +170,7 @@ class DialogCalendarTemplateApply extends LitElement {
     const templateName = this._templateName ?? "Default Template Name";
     const week = this._week ?? 40;
     let rrule: string | undefined;
-    if (this._howOften !== "None") {
+    if (this._howOften !== "none") {
       rrule =
         "FREQ=" +
         this._howOften.toUpperCase() +
