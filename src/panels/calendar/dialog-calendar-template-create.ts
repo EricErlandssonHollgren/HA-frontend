@@ -200,7 +200,7 @@ export class DialogCalendarTemplateCreate extends LitElement {
                             class="calendar-button"
                             @click=${this._onOpenEventModal(day)}
                           >
-                            Add event
+                            ADD EVENT
                           </button>
                         </td>
                       `;
@@ -299,10 +299,19 @@ export class DialogCalendarTemplateCreate extends LitElement {
           height: fit-content;
           border: 1px;
           border-radius: 10px;
+          cursor: pointer;
+        }
+        button.event:hover {
+          background-color: #bebcbc;
+          cursor: pointer;
         }
 
         button.calendar-button {
           margin-top: 8px;
+          font:
+            12.25px Roboto,
+            sans-serif;
+          font-weight: 500;
           width: 100px;
           height: 40px;
           border: 1px;
@@ -310,6 +319,11 @@ export class DialogCalendarTemplateCreate extends LitElement {
           box-sizing: border-box;
           background-color: #03a9fa;
           color: white;
+          cursor: pointer;
+        }
+        button.calendar-button:hover {
+          cursor: pointer;
+          background-color: #0491d8;
         }
 
         div.no-events {

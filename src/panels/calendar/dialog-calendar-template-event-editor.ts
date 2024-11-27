@@ -146,36 +146,35 @@ class DialogCalendarTemplateEventEditor extends LitElement {
               ></ha-time-input>
             </div>
           </div>
-          ${isCreate
-            ? html`
-                <mwc-button
-                  slot="primaryAction"
-                  @click=${this._onSaveEvent(isCreate)}
-                >
-                  ${this.hass.localize("ui.components.calendar.event.add")}
-                </mwc-button>
-              `
-            : html`
-                <mwc-button
-                  slot="primaryAction"
-                  @click=${this._onSaveEvent(isCreate)}
-                >
-                  ${this.hass.localize("ui.components.calendar.event.save")}
-                </mwc-button>
-                ${this._params.canDelete
-                  ? html`
-                      <mwc-button
-                        slot="secondaryAction"
-                        class="warning"
-                        @click=${this._deleteEvent}
-                      >
-                        ${this.hass.localize(
-                          "ui.components.calendar.event.delete"
-                        )}
-                      </mwc-button>
-                    `
-                  : ""}
-              `}
+          <div class="footer">
+            ${isCreate
+              ? html`
+                  <button
+                    class="save-button"
+                    @click=${this._onSaveEvent(isCreate)}
+                  >
+                    SAVE EVENT
+                  </button>
+                `
+              : html`
+                  <button
+                    class="save-button"
+                    @click=${this._onSaveEvent(isCreate)}
+                  >
+                    SAVE EVENT
+                  </button>
+                  ${this._params.canDelete
+                    ? html`
+                        <button
+                          class="delete-button"
+                          @click=${this._deleteEvent}
+                        >
+                          DELETE EVENT
+                        </button>
+                      `
+                    : ""}
+                `}
+          </div>
         </div>
       </ha-dialog>
     `;
@@ -357,6 +356,47 @@ class DialogCalendarTemplateEventEditor extends LitElement {
         .value {
           display: inline-block;
           vertical-align: top;
+        }
+        .footer {
+          display: flex;
+          justify-content: end;
+          gap: 16px;
+        }
+        .save-button {
+          font:
+            12.25px Roboto,
+            sans-serif;
+          width: 100px;
+          font-weight: 500;
+          height: 40px;
+          border: 1px;
+          border-radius: 4px;
+          box-sizing: border-box;
+          background-color: white;
+          color: #03a9fa;
+          cursor: pointer;
+        }
+        .save-button:hover {
+          background-color: rgba(0, 174, 248, 0.08);
+          cursor: pointer;
+        }
+        .delete-button {
+          font:
+            12.25px Roboto,
+            sans-serif;
+          width: 100px;
+          font-weight: 500;
+          height: 40px;
+          border: 1px;
+          border-radius: 4px;
+          box-sizing: border-box;
+          background-color: white;
+          color: rgb(186, 27, 27);
+          cursor: pointer;
+        }
+        .delete-button:hover {
+          cursor: pointer;
+          background-color: rgba(186, 27, 27, 0.08);
         }
       `,
     ];
