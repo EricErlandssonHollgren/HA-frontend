@@ -15,7 +15,9 @@ import type { CalendarTemplateCreateDialogParams } from "./show-dialog-calendar-
 import type {
   CalendarTemplateViewEventItem,
   CalendarTemplateEvents,
+  CalendarTemplateViewFullTemplate,
 } from "../../data/calendar";
+import { fetchCalendarTemplates } from "../../data/calendar";
 
 @customElement("dialog-calendar-template-create")
 export class DialogCalendarTemplateCreate extends LitElement {
@@ -25,10 +27,15 @@ export class DialogCalendarTemplateCreate extends LitElement {
 
   @state() private _calendarEvents: CalendarTemplateViewEventItem[] = [];
 
+  @state() private _calendarTemplates: CalendarTemplateViewFullTemplate[] = [];
+
   public async showDialog(
     params: CalendarTemplateCreateDialogParams
   ): Promise<void> {
     this._params = params;
+    this._calendarTemplates = (
+      await fetchCalendarTemplates(this.hass, params.calendars)
+    ).templates;
   }
 
   private closeDialog(): void {
@@ -59,17 +66,12 @@ export class DialogCalendarTemplateCreate extends LitElement {
       entry: event,
       index: index,
     });
-    // console.log(day);
-    // console.log(event.summary);
   }
 
-  // private _onOpenEditModal(day:string, event: CalendarTemplateViewEventItem) => () => {
-  //   this._openEditModal(day,event);
-  // }
-
-  // private _openEditModal(day:string, event: CalendarTemplateViewEventItem) : void{
-  //   console.log(event.summary)
-  // }
+  private _onUpdateCalendarEvents =
+    (events: CalendarTemplateViewEventItem[]) => () => {
+      this._updateCalendarEvents(events);
+    };
 
   private _updateCalendarEvents(events: CalendarTemplateViewEventItem[]): void {
     this._calendarEvents = events;
@@ -117,62 +119,90 @@ export class DialogCalendarTemplateCreate extends LitElement {
             class="header-button"
           ></ha-icon-button>
         </div>
-        <table class="custom-calendar">
-          <thead>
-            <tr>
-              <th>MON</th>
-              <th>TUE</th>
-              <th>WED</th>
-              <th>THU</th>
-              <th>FRI</th>
-              <th>SAT</th>
-              <th>SUN</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="weekday-column">
-              ${["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((day) => {
-                const dayEvents = this._calendarEvents
-                  .filter((event) =>
-                    this._convertIntDayToString(event.weekday_int).startsWith(
-                      day
-                    )
-                  )
-                  .sort((a, b) => a.start_time.localeCompare(b.start_time)); // Sort by start_time
 
-                return html`
-                  <td>
-                    ${dayEvents.length > 0
-                      ? dayEvents.map(
-                          (event, index) => html`
-                            <button
-                              class="event"
-                              @click=${this._onOpenEventModal(
-                                day,
-                                event,
-                                index
-                              )}
-                            >
-                              <div>
-                                <strong>${event.summary}</strong><br />
-                                ${event.start_time} - ${event.end_time}<br />
-                              </div>
-                            </button>
-                          `
-                        )
-                      : html` <div class="no-events">No events</div> `}
+        <div class="calendar-container">
+          <div class="template-sidebar">
+            <h3>Templates</h3>
+            <ul class="template-list">
+              ${this._calendarTemplates.map(
+                (template) => html`
+                  <li>
                     <button
-                      class="calendar-button"
-                      @click=${this._onOpenEventModal(day)}
+                      @click=${this._onUpdateCalendarEvents(
+                        template.template_view_events
+                      )}
                     >
-                      Add event
+                      ${template.template_name}
                     </button>
-                  </td>
-                `;
-              })}
-              </tr>
-            </tbody>
-          </table>
+                  </li>
+                `
+              )}
+            </ul>
+          </div>
+          <div>
+            <table class="custom-calendar">
+              <thead>
+                <tr>
+                  <th>MON</th>
+                  <th>TUE</th>
+                  <th>WED</th>
+                  <th>THU</th>
+                  <th>FRI</th>
+                  <th>SAT</th>
+                  <th>SUN</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="weekday-column">
+                  ${["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
+                    (day) => {
+                      let dayEvents: CalendarTemplateViewEventItem[] = [];
+                      if (this._calendarEvents) {
+                        dayEvents = this._calendarEvents
+                          .filter((event) =>
+                            this._convertIntDayToString(
+                              event.weekday_int
+                            ).startsWith(day)
+                          )
+                          .sort((a, b) =>
+                            a.start_time.localeCompare(b.start_time)
+                          ); // Sort by start_time
+                      }
+                      return html`
+                        <td>
+                          ${dayEvents.length > 0
+                            ? dayEvents.map(
+                                (event, index) => html`
+                                  <button
+                                    class="event"
+                                    @click=${this._onOpenEventModal(
+                                      day,
+                                      event,
+                                      index
+                                    )}
+                                  >
+                                    <div>
+                                      <strong>${event.summary}</strong><br />
+                                      ${event.start_time} - ${event.end_time}<br />
+                                    </div>
+                                  </button>
+                                `
+                              )
+                            : html` <div class="no-events">No events</div>`}
+                          <button
+                            class="calendar-button"
+                            @click=${this._onOpenEventModal(day)}
+                          >
+                            Add event
+                          </button>
+                        </td>
+                      `;
+                    }
+                  )}
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </dialog>
     `;
@@ -208,11 +238,41 @@ export class DialogCalendarTemplateCreate extends LitElement {
 
         .custom-calendar {
           width: 100%;
+          height: 100%;
           max-width: 600px;
           border-collapse: collapse;
         }
+        .calendar-container {
+          display: flex;
+          height: inherit;
+        }
+        .template-sidebar {
+          width: 100px;
+          height: 90%;
+          border-right: 1px solid;
+          padding: 16px;
+          margin-right: 16px;
+          text-align: center;
+          padding-top: 0;
+        }
+        .template-sidebar h3 {
+          margin: 0;
+        }
+        .template-list {
+          list-style: none;
+          padding: 0;
+        }
 
-        thead th,
+        .template-list li {
+          margin-bottom: 8px;
+        }
+
+        th {
+          text-align: center;
+          box-sizing: border-box;
+          overflow-wrap: break-word;
+        }
+        thead,
         tbody td {
           text-align: center;
           padding: 4px;
