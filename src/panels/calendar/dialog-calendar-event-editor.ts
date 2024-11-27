@@ -60,6 +60,8 @@ class DialogCalendarEventEditor extends LitElement {
 
   @state() private _description? = "";
 
+  @state() private _location? = "";
+
   @state() private _rrule?: string;
 
   @state() private _allDay = false;
@@ -100,6 +102,7 @@ class DialogCalendarEventEditor extends LitElement {
       this._description = entry.description;
       this._attendees = entry.attendees;
       this._rrule = entry.rrule;
+      this._location = entry.location;
       if (this._allDay) {
         this._dtstart = new Date(entry.dtstart + "T00:00:00");
         // Calendar event end dates are exclusive, but not shown that way in the UI. The
@@ -131,6 +134,7 @@ class DialogCalendarEventEditor extends LitElement {
     this._summary = "";
     this._description = "";
     this._attendees = [];
+    this._location = "";
     this._rrule = undefined;
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
@@ -192,6 +196,13 @@ class DialogCalendarEventEditor extends LitElement {
             @change=${this._handleDescriptionChanged}
             autogrow
           ></ha-textarea>
+          <ha-textfield
+            class="location"
+            name="location"
+            .label=${"Location"}
+            .value=${this._location}
+            @input=${this._handleLocationChanged}
+          ></ha-textfield>
           <div class="attendees">
             ${this._attendees?.length ? html`<span>Attendees</span>` : ""}
             <div class="flex-col">
@@ -373,6 +384,10 @@ class DialogCalendarEventEditor extends LitElement {
     this._summary = ev.target.value;
   }
 
+  private _handleLocationChanged(ev) {
+    this._location = ev.target.value;
+  }
+
   private _handleDescriptionChanged(ev) {
     this._description = ev.target.value;
   }
@@ -467,6 +482,7 @@ class DialogCalendarEventEditor extends LitElement {
     const data: CalendarEventMutableParams = {
       summary: this._summary,
       description: this._description,
+      location: this._location,
       attendees: this._attendees,
       rrule: this._rrule || undefined,
       dtstart: "",
@@ -750,6 +766,9 @@ class DialogCalendarEventEditor extends LitElement {
         .attendee {
           display: flex;
           flex-direction: column;
+        }
+        .location {
+          margin-bottom: 16px;
         }
       `,
     ];
