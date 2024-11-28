@@ -31,6 +31,8 @@ export interface CalendarEventData {
   dtend: string;
   rrule?: string;
   description?: string;
+  attendees?: Attendee[];
+  location?: string;
 }
 
 export interface CalendarEventMutableParams {
@@ -39,6 +41,18 @@ export interface CalendarEventMutableParams {
   dtend: string;
   rrule?: string;
   description?: string;
+  attendees?: Attendee[];
+  location?: string;
+}
+
+export interface Attendee {
+  email: string;
+  id?: string;
+  response_status?: string;
+  name?: string;
+  comment?: string;
+  display_name?: string;
+  optional?: boolean;
 }
 
 export interface CalendarTemplateEvents {
@@ -120,6 +134,8 @@ export const fetchCalendarEvents = async (
         dtend: eventEnd,
         recurrence_id: ev.recurrence_id,
         rrule: ev.rrule,
+        attendees: ev.attendees,
+        location: ev.location,
       };
       const event: CalendarEvent = {
         start: eventStart,

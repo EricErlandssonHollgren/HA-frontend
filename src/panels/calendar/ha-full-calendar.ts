@@ -338,6 +338,7 @@ export class HAFullCalendar extends LitElement {
       },
       canEdit: canEdit,
       canDelete: canDelete,
+      attendees: info.event.extendedProps.attendees
     });
   }
 
