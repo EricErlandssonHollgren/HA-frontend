@@ -26,6 +26,9 @@ import type { CalendarEventDetailDialogParams } from "./show-dialog-calendar-eve
 import { showCalendarEventEditDialog } from "./show-dialog-calendar-event-editor";
 import { resolveTimeZone } from "../../common/datetime/resolve-time-zone";
 
+/*
+This class represents a dialog box for showing details of an event.
+*/
 class DialogCalendarEventDetail extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
 
@@ -39,6 +42,9 @@ class DialogCalendarEventDetail extends LitElement {
 
   @state() private _data!: CalendarEventMutableParams;
 
+  /**
+   * Function used for showing the dialog. If there is already an entry, its value will be copied to _data.
+   */
   public async showDialog(
     params: CalendarEventDetailDialogParams
   ): Promise<void> {
@@ -50,12 +56,18 @@ class DialogCalendarEventDetail extends LitElement {
     }
   }
 
+  /**
+   * Function called when closing the dialog. Resets the values of _calendarId and _params. Closes the dialog.
+   */
   private closeDialog(): void {
     this._calendarId = undefined;
     this._params = undefined;
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
 
+  /**
+   * @returns HTML for the dialog box. Contains information fields of the event.
+   */
   protected render() {
     if (!this._params) {
       return nothing;
@@ -82,10 +94,11 @@ class DialogCalendarEventDetail extends LitElement {
                 : ""}
               ${this._data.description
                 ? html`<br />
-                      <div class="description">
-                        ${this._data.description.split('\n').map(
-                        (line) => html`${line}<br />`)}
-                      </div>
+                    <div class="description">
+                      ${this._data.description
+                        .split("\n")
+                        .map((line) => html`${line}<br />`)}
+                    </div>
                     <br />`
                 : nothing}
             </div>
@@ -165,6 +178,11 @@ class DialogCalendarEventDetail extends LitElement {
     `;
   }
 
+  /**
+   * Converts the a value to text, uses translations to get the correct value
+   * @param value
+   * @returns
+   */
   private _renderRRuleAsText(value: string) {
     if (!value) {
       return "";
@@ -180,6 +198,10 @@ class DialogCalendarEventDetail extends LitElement {
     }
   }
 
+  /**
+   * Formats the dates to a range between start and end date
+   * @returns
+   */
   private _formatDateRange() {
     const timeZone = resolveTimeZone(
       this.hass.locale.time_zone,
@@ -218,11 +240,17 @@ class DialogCalendarEventDetail extends LitElement {
     }`;
   }
 
+  /**
+   * Opens the edit event dialog
+   */
   private async _editEvent() {
     showCalendarEventEditDialog(this, this._params!);
     this.closeDialog();
   }
 
+  /**
+   * Deletes and event from the calendar.
+   */
   private async _deleteEvent() {
     this._submitting = true;
     const entry = this._params!.entry!;
@@ -273,6 +301,9 @@ class DialogCalendarEventDetail extends LitElement {
     this.closeDialog();
   }
 
+  /**
+   * Styling of the dialog
+   */
   static get styles(): CSSResultGroup {
     return [
       haStyleDialog,

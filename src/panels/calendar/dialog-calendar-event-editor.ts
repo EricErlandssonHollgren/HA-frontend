@@ -43,7 +43,9 @@ import { showConfirmEventDialog } from "./show-confirm-event-dialog-box";
 import type { CalendarEventEditDialogParams } from "./show-dialog-calendar-event-editor";
 
 const CALENDAR_DOMAINS = ["calendar"];
-
+/**
+ * This class represents a dialog fo creating or editing calendar events.
+ */
 @customElement("dialog-calendar-event-editor")
 class DialogCalendarEventEditor extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
@@ -80,6 +82,10 @@ class DialogCalendarEventEditor extends LitElement {
   // timezone, but floating without a timezone.
   private _timeZone?: string;
 
+  /**
+   * Function for showing the dialog, checks the calendarId and prefills the input fields if there is an entry.
+   * @param params
+   */
   public showDialog(params: CalendarEventEditDialogParams): void {
     this._error = undefined;
     this._info = undefined;
@@ -123,6 +129,10 @@ class DialogCalendarEventEditor extends LitElement {
     }
   }
 
+  /**
+   * Resets the variables and closes the dialog
+   * @returns
+   */
   public closeDialog(): void {
     if (!this._params) {
       return;
@@ -139,6 +149,9 @@ class DialogCalendarEventEditor extends LitElement {
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
 
+  /**
+   * Returns HTML for the dialog, contains different types of input fields and buttons for saving or deleting the event
+   */
   protected render() {
     if (!this._params) {
       return nothing;
@@ -344,6 +357,9 @@ class DialogCalendarEventEditor extends LitElement {
   private _isEditableCalendar = (entityStateObj: HassEntity) =>
     supportsFeature(entityStateObj, CalendarEntityFeature.CREATE_EVENT);
 
+  /**
+   * Separates a date into both date and time and assigns the respective variables with the value
+   */
   private _getLocaleStrings = memoizeOne(
     (startDate?: Date, endDate?: Date) => ({
       startDate: this._formatDate(startDate!),
@@ -353,13 +369,45 @@ class DialogCalendarEventEditor extends LitElement {
     })
   );
 
+  /**
+   * Wrapper function for _removeAttendee
+   */
   private _onRemoveAttendee = (index: number) => () => {
     this._removeAttendee(index);
   };
 
+  /**
+   * Removes the attendee from the list of attendees
+   */
+  private _removeAttendee(index: number): void {
+    this._attendees = this._attendees?.filter((_, i) => i !== index);
+  }
+
+  /**
+   * Wrapper function for _handleAttendeesChanges
+   */
   private _onAttendeeChange = (index: number) => (ev: Event) => {
     this._handleAttendeesChanged(ev, index);
   };
+
+  /**
+   * Edits the list of attendees
+   * @param ev the event that has the list of attendees
+   * @param index the index on which to remove the attendee
+   */
+  private _handleAttendeesChanged(ev: Event, index: number): void {
+    const target = ev.target as HTMLInputElement;
+    const newValue = target.value;
+
+    if (this._attendees) {
+      const updatedAttendees = [...this._attendees];
+      updatedAttendees[index] = {
+        ...updatedAttendees[index],
+        email: newValue,
+      };
+      this._attendees = updatedAttendees;
+    }
+  }
 
   // Formats a date in specified timezone, or defaulting to browser display timezone
   private _formatDate(date: Date, timeZone: string = this._timeZone!): string {
@@ -392,6 +440,9 @@ class DialogCalendarEventEditor extends LitElement {
     this._description = ev.target.value;
   }
 
+  /**
+   * Creates a new attendee and adds it to the list of attendees
+   */
   private _addAttendee() {
     const newAttendee: Attendee = {
       comment: undefined,
@@ -402,24 +453,6 @@ class DialogCalendarEventEditor extends LitElement {
       response_status: "",
     };
     this._attendees = [...(this._attendees ?? []), newAttendee];
-  }
-
-  private _removeAttendee(index: number): void {
-    this._attendees = this._attendees?.filter((_, i) => i !== index);
-  }
-
-  private _handleAttendeesChanged(ev: Event, index: number): void {
-    const target = ev.target as HTMLInputElement;
-    const newValue = target.value;
-
-    if (this._attendees) {
-      const updatedAttendees = [...this._attendees];
-      updatedAttendees[index] = {
-        ...updatedAttendees[index],
-        email: newValue,
-      };
-      this._attendees = updatedAttendees;
-    }
   }
 
   private _handleRRuleChanged(ev) {

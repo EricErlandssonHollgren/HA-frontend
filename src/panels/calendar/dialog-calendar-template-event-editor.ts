@@ -1,34 +1,31 @@
 import "@material/mwc-button";
-import { formatInTimeZone } from "date-fns-tz";
 import type { CSSResultGroup } from "lit";
 import { LitElement, css, html, nothing } from "lit";
 import { property, state } from "lit/decorators";
-import { fireEvent, type HASSDomEvent } from "../../common/dom/fire_event";
+import { fireEvent } from "../../common/dom/fire_event";
 import "../../components/entity/state-info";
 import "../../components/ha-alert";
 import "../../components/ha-date-input";
 import "../../components/ha-time-input";
 import { createCloseHeading } from "../../components/ha-dialog";
 import { haStyleDialog } from "../../resources/styles";
-import type { CalendarViewChanged, HomeAssistant } from "../../types";
+import type { HomeAssistant } from "../../types";
 import "../lovelace/components/hui-generic-entity-row";
 // import { createCloseHeading } from "../../components/ha-dialog";
 import type { CalendarEventEditTemplateDialogParams } from "./show-dialog-calendar-event-editor-template";
 import "./dialog-calendar-template-create";
-import { resolveTimeZone } from "../../common/datetime/resolve-time-zone";
 import "../../components/ha-formfield";
 import "../../components/ha-textarea";
 import "../../components/ha-switch";
 import type { CalendarTemplateViewEventItem } from "../../data/calendar";
 
+/**
+ * This class is responsible for a dialog for creating or editing events adapted for a calendar.
+ */
 class DialogCalendarTemplateEventEditor extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
 
   @state() private _calendarEvents: CalendarTemplateViewEventItem[] = [];
-
-  @state() private _error?: string;
-
-  @state() private _info?: string;
 
   @state() private _params?: CalendarEventEditTemplateDialogParams;
 
@@ -40,17 +37,10 @@ class DialogCalendarTemplateEventEditor extends LitElement {
 
   @state() private _dtend?: string; // Inclusive for display, in sync with _data.dtend (exclusive)
 
-  // Dates are displayed in the timezone according to the user's profile
-  // which may be different from the Home Assistant timezone. When
-  // events are persisted, they are relative to the Home Assistant
-  // timezone, but floating without a timezone.
-  private _timeZone?: string;
-
+  /** Shows the dialog and sets the respective variable to the value of the entry, if there is one. If not gives them default values. */
   public async showDialog(
     params: CalendarEventEditTemplateDialogParams
   ): Promise<void> {
-    this._error = undefined;
-    this._info = undefined;
     this._params = params;
     if (params.entry) {
       const entry = params.entry!;
@@ -64,11 +54,6 @@ class DialogCalendarTemplateEventEditor extends LitElement {
       this._dtstart = "00:00:00";
       this._dtend = "00:00:00";
     }
-
-    this._timeZone = resolveTimeZone(
-      this.hass.locale.time_zone,
-      this.hass.config.time_zone
-    );
   }
 
   private closeDialog(): void {
@@ -76,6 +61,11 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
 
+  /**
+   *
+   * @returns HTML for the dialog, contains input fields for summary, description and time of an event.
+   * Has a edit and create variant that the header and footer depends on.
+   */
   protected render() {
     if (!this._params) {
       return nothing;
@@ -180,6 +170,9 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     `;
   }
 
+  /**
+   * Removes an event from the list of calendar events based on its index. Updates the list and closes the dialog.
+   */
   private _deleteEvent() {
     const i = this._params?.index;
     if (i !== undefined && i >= 0 && i < this._calendarEvents.length) {
@@ -194,10 +187,17 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     }
   }
 
+  /**
+   * Wrapper function for _saveEvent
+   */
   private _onSaveEvent = (isCreate: boolean) => () => {
     this._saveEvent(isCreate);
   };
 
+  /**
+   * Creates a template event and adds it to the end of the list of events, or edits the event at the current index
+   * @param isCreate true if the user is adding a new event, false if the have selected an existing event.
+   */
   private _saveEvent(isCreate: boolean): void {
     // Validate required fields
     if (this._summary && this._dtstart && this._dtend) {
@@ -263,24 +263,12 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     this._description = ev.target.value;
   }
 
-  // Formats a time in specified timezone, or defaulting to browser display timezone
-  private _formatTime(date: Date, timeZone: string = this._timeZone!): string {
-    return formatInTimeZone(date, timeZone, "HH:mm:ss"); // 24 hr
-  }
-
   private _startTimeChanged(ev: CustomEvent) {
     this._dtstart = ev.detail.value;
   }
 
   private _endTimeChanged(ev: CustomEvent) {
     this._dtend = ev.detail.value;
-  }
-
-  private async _handleViewChanged(
-    ev: HASSDomEvent<CalendarViewChanged>
-  ): Promise<void> {
-    // eslint-disable-next-line no-console
-    console.log(ev);
   }
 
   static get styles(): CSSResultGroup {

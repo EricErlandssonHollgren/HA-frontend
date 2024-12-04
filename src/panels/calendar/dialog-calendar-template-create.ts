@@ -25,6 +25,9 @@ import {
   fetchCalendarTemplates,
 } from "../../data/calendar";
 
+/**
+ * This class is responsible for the dialog used for creating and handling templates.
+ */
 @customElement("dialog-calendar-template-create")
 export class DialogCalendarTemplateCreate extends LitElement {
   public hass!: HomeAssistant;
@@ -35,6 +38,9 @@ export class DialogCalendarTemplateCreate extends LitElement {
 
   @state() private _calendarTemplates: CalendarTemplateViewFullTemplate[] = [];
 
+  /**
+   * Function that shows the dialog, updates the variables by fetching the current templates
+   */
   public async showDialog(
     params: CalendarTemplateCreateDialogParams
   ): Promise<void> {
@@ -44,6 +50,9 @@ export class DialogCalendarTemplateCreate extends LitElement {
     ).templates;
   }
 
+  /**
+   * Resets the variables and closes the dialog
+   */
   private closeDialog(): void {
     this._calendarEvents = [];
     this._params = undefined;
@@ -54,6 +63,9 @@ export class DialogCalendarTemplateCreate extends LitElement {
     super.connectedCallback();
   }
 
+  /**
+   * Wrapper function for _openEventModal
+   */
   private _onOpenEventModal =
     (day: string, event?: CalendarTemplateViewEventItem, index?: number) =>
     () => {
@@ -65,6 +77,13 @@ export class DialogCalendarTemplateCreate extends LitElement {
       }
     };
 
+  /**
+   * Calls the function showCalendarEventEditTemplateDialog and passes the parameters as detailParams
+   * @param day the day of the week
+   * @param event the selected event
+   * @param index the index of the event in the list of events from that day
+   * @param canDelete true if it should be possible to delete the selected event
+   */
   private _openEventModal(
     day: string,
     event?: CalendarTemplateViewEventItem,
@@ -82,10 +101,17 @@ export class DialogCalendarTemplateCreate extends LitElement {
     });
   }
 
+  /**
+   * Wrapper function for _openApplyModal
+   */
   private _onOpenApplyModal = (calendars: Calendar[] | undefined) => () => {
     this._openApplyModal(calendars);
   };
 
+  /**
+   * Calls the function showCalendarTemplateApplyDialog which opens the Apply Dialog and passes the calendars and onSave function
+   * @param calendars a list of calendare
+   */
   private _openApplyModal(calendars: Calendar[] | undefined): void {
     if (!calendars) {
       throw Error();
@@ -108,6 +134,13 @@ export class DialogCalendarTemplateCreate extends LitElement {
     });
   }
 
+  /**
+   * Applies the template events to the selected calendar in the selected recurrence pattern
+   * @param selectedCalendars a list of the selected calendars
+   * @param templateName the name of the template
+   * @param week the first week that the template should be applied on
+   * @param rrule the recurrence rule for application
+   */
   private _applyCalendarTemplate(
     selectedCalendars: string[],
     templateName: string,
@@ -225,6 +258,11 @@ export class DialogCalendarTemplateCreate extends LitElement {
     );
   }
 
+  /**
+   *
+   * @returns HTML for the Template dialog. Includes a calendar view of a week,
+   * a list of the current templates and buttons for adding an event or applying the template
+   */
   protected render() {
     if (!this._params) {
       return nothing;

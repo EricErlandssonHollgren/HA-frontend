@@ -21,6 +21,9 @@ import type { HaListItem } from "../../components/ha-list-item";
 import { stopPropagation } from "../../common/dom/stop_propagation";
 import { createCloseHeading } from "../../components/ha-dialog";
 
+/**
+ * This class represents a dialog for applying a template to chosen calendars.
+ */
 class DialogCalendarTemplateApply extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
 
@@ -28,14 +31,19 @@ class DialogCalendarTemplateApply extends LitElement {
 
   private _templateName?: string = "DefaultName";
 
+  /** The week on which to start applying the template. Default value week 1 */
   private _week?: number = 1;
 
+  /** How often the template will be applied (1 = every week/month/year, 2 = every other week/month/year) */
   private _interval: number = 1;
 
+  /** How often the template will be applied (weekly/monthly/yearly) */
   private _howOften: string = "";
 
+  /** For how many weeks/months/years will the template be applied */
   private _endAfter: number = 1;
 
+  /** The selected calendars for which the templates will be applied */
   private _selectedCalendars: string[] = [];
 
   public async showDialog(
@@ -49,6 +57,9 @@ class DialogCalendarTemplateApply extends LitElement {
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
 
+  /**
+   * Handles the selection of calendars for applying a template
+   */
   private async _requestSelected(ev: CustomEvent<RequestSelectedDetail>) {
     ev.stopPropagation();
     const entityId = (ev.target as HaListItem).value;
@@ -66,6 +77,10 @@ class DialogCalendarTemplateApply extends LitElement {
     }
   }
 
+  /**
+   *
+   * @returns HTML for the dialog of specifying application a template
+   */
   protected render() {
     const calendarItems = this._params?.calendars.map(
       (selCal) => html`
@@ -167,6 +182,9 @@ class DialogCalendarTemplateApply extends LitElement {
     this._endAfter = Number((event.target as HTMLInputElement).value);
   }
 
+  /**
+   * Converts the input to a valid recurrence rule and calls the onSave function. Reloads the page.
+   */
   private _submitTemplateDetails(): void {
     const templateName = this._templateName ?? "Default Template Name";
     const week = this._week ?? 40;
