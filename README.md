@@ -22,23 +22,23 @@ This is the repository for the official [Home Assistant](https://home-assistant.
 
 A complete guide can be found at the following [link](https://www.home-assistant.io/developers/frontend/). It describes a short guide for the build of project.
 
-### Using new Google Calendar features
+## Using new Google Calendar features
 
-## Setup
+### Setup
 
 To use the new features implemented in the Google Calendar integration, Google Calendar needs to be added to your local HomeAssistant.
 
 - Settings --> Devices & Services --> Add integration --> Search for Google --> Google Calendar --> Follow the presented instructions.
 
-## Purpose
+### Purpose
 
-# Template
+#### Template
 
 The purpose of the template feature is for the user to be able to create a collection of calendar events that belong together and that are saved for future use. Examples are if you have specific workout schedules that belogn to different seasons or have rare plants with unique watering schedules.
 
-## Usage
+### Usage
 
-# Template feature
+#### Template feature
 
 - To open the Create Template modal, click the button "Create template" in the left bottom corner.
 - Add wanted events to corresponding days, at least one is needed.
