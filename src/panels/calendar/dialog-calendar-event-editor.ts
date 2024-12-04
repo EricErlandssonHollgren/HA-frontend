@@ -1,5 +1,6 @@
 import "@material/mwc-button";
 import { formatInTimeZone, toDate } from "date-fns-tz";
+import { mdiTrashCanOutline } from "@mdi/js";
 import {
   addDays,
   addHours,
@@ -26,7 +27,7 @@ import "../../components/ha-switch";
 import "../../components/ha-textarea";
 import "../../components/ha-textfield";
 import "../../components/ha-time-input";
-import type { CalendarEventMutableParams } from "../../data/calendar";
+import type { Attendee, CalendarEventMutableParams } from "../../data/calendar";
 import {
   CalendarEntityFeature,
   RecurrenceRange,
@@ -59,6 +60,8 @@ class DialogCalendarEventEditor extends LitElement {
 
   @state() private _description? = "";
 
+  @state() private _location? = "";
+
   @state() private _rrule?: string;
 
   @state() private _allDay = false;
@@ -68,6 +71,8 @@ class DialogCalendarEventEditor extends LitElement {
   @state() private _dtend?: Date; // Inclusive for display, in sync with _data.dtend (exclusive)
 
   @state() private _submitting = false;
+
+  @state() private _attendees?: Attendee[];
 
   // Dates are displayed in the timezone according to the user's profile
   // which may be different from the Home Assistant timezone. When
@@ -95,7 +100,9 @@ class DialogCalendarEventEditor extends LitElement {
       this._allDay = isDate(entry.dtstart);
       this._summary = entry.summary;
       this._description = entry.description;
+      this._attendees = entry.attendees;
       this._rrule = entry.rrule;
+      this._location = entry.location;
       if (this._allDay) {
         this._dtstart = new Date(entry.dtstart + "T00:00:00");
         // Calendar event end dates are exclusive, but not shown that way in the UI. The
@@ -126,6 +133,8 @@ class DialogCalendarEventEditor extends LitElement {
     this._dtend = undefined;
     this._summary = "";
     this._description = "";
+    this._attendees = [];
+    this._location = "";
     this._rrule = undefined;
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
@@ -187,6 +196,41 @@ class DialogCalendarEventEditor extends LitElement {
             @change=${this._handleDescriptionChanged}
             autogrow
           ></ha-textarea>
+          <ha-textfield
+            class="location"
+            name="location"
+            .label=${"Location"}
+            .value=${this._location}
+            @input=${this._handleLocationChanged}
+          ></ha-textfield>
+          <div class="attendees">
+            ${this._attendees?.length ? html`<span>Attendees</span>` : ""}
+            <div class="flex-col">
+              ${this._attendees?.map(
+                (attendee, index) => html`
+                  <div class="flex-row">
+                    <ha-icon-button
+                      .path=${mdiTrashCanOutline}
+                      @click=${this._onRemoveAttendee(index)}
+                    >
+                    </ha-icon-button>
+                    <ha-textfield
+                      class="flex-grow"
+                      name="attendee"
+                      .value=${attendee.email}
+                      .label=${"Attendee"}
+                      @input=${this._onAttendeeChange(index)}
+                    >
+                    </ha-textfield>
+                  </div>
+                `
+              )}
+            </div>
+            <ha-button
+              .label=${"Add attendee"}
+              @click=${this._addAttendee}
+            ></ha-button>
+          </div>
           <ha-entity-picker
             name="calendar"
             .hass=${this.hass}
@@ -309,6 +353,14 @@ class DialogCalendarEventEditor extends LitElement {
     })
   );
 
+  private _onRemoveAttendee = (index: number) => () => {
+    this._removeAttendee(index);
+  };
+
+  private _onAttendeeChange = (index: number) => (ev: Event) => {
+    this._handleAttendeesChanged(ev, index);
+  };
+
   // Formats a date in specified timezone, or defaulting to browser display timezone
   private _formatDate(date: Date, timeZone: string = this._timeZone!): string {
     return formatInTimeZone(date, timeZone, "yyyy-MM-dd");
@@ -332,8 +384,42 @@ class DialogCalendarEventEditor extends LitElement {
     this._summary = ev.target.value;
   }
 
+  private _handleLocationChanged(ev) {
+    this._location = ev.target.value;
+  }
+
   private _handleDescriptionChanged(ev) {
     this._description = ev.target.value;
+  }
+
+  private _addAttendee() {
+    const newAttendee: Attendee = {
+      comment: undefined,
+      display_name: undefined,
+      email: "",
+      id: undefined,
+      optional: false,
+      response_status: "",
+    };
+    this._attendees = [...(this._attendees ?? []), newAttendee];
+  }
+
+  private _removeAttendee(index: number): void {
+    this._attendees = this._attendees?.filter((_, i) => i !== index);
+  }
+
+  private _handleAttendeesChanged(ev: Event, index: number): void {
+    const target = ev.target as HTMLInputElement;
+    const newValue = target.value;
+
+    if (this._attendees) {
+      const updatedAttendees = [...this._attendees];
+      updatedAttendees[index] = {
+        ...updatedAttendees[index],
+        email: newValue,
+      };
+      this._attendees = updatedAttendees;
+    }
   }
 
   private _handleRRuleChanged(ev) {
@@ -396,6 +482,8 @@ class DialogCalendarEventEditor extends LitElement {
     const data: CalendarEventMutableParams = {
       summary: this._summary,
       description: this._description,
+      location: this._location,
+      attendees: this._attendees,
       rrule: this._rrule || undefined,
       dtstart: "",
       dtend: "",
@@ -591,6 +679,10 @@ class DialogCalendarEventEditor extends LitElement {
         state-info {
           line-height: 40px;
         }
+        ha-button {
+          align-self: center;
+          margin-bottom: 16px;
+        }
         ha-alert {
           display: block;
           margin-bottom: 16px;
@@ -601,6 +693,9 @@ class DialogCalendarEventEditor extends LitElement {
         }
         ha-textarea {
           margin-bottom: 16px;
+        }
+        ha-textfield {
+          margin-bottom: 8px;
         }
         ha-formfield {
           display: block;
@@ -621,6 +716,22 @@ class DialogCalendarEventEditor extends LitElement {
         .flex {
           display: flex;
           justify-content: space-between;
+        }
+        .flex-col {
+          display: flex;
+          flex-direction: column;
+        }
+        .flex-row {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+        }
+        .flex-grow {
+          flex-grow: 1;
+        }
+        .attendee-button {
+          height: 64px;
         }
         .label {
           font-size: 12px;
@@ -651,6 +762,13 @@ class DialogCalendarEventEditor extends LitElement {
         .value {
           display: inline-block;
           vertical-align: top;
+        }
+        .attendee {
+          display: flex;
+          flex-direction: column;
+        }
+        .location {
+          margin-bottom: 16px;
         }
       `,
     ];

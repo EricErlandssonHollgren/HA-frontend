@@ -1,5 +1,5 @@
 import "@material/mwc-button";
-import { mdiCalendarClock } from "@mdi/js";
+import { mdiCalendarClock, mdiCalendarCheck, mdiCompass } from "@mdi/js";
 import { toDate } from "date-fns-tz";
 import { addDays, isSameDay } from "date-fns";
 import type { CSSResultGroup } from "lit";
@@ -82,12 +82,55 @@ class DialogCalendarEventDetail extends LitElement {
                 : ""}
               ${this._data.description
                 ? html`<br />
-                    <div class="description">${this._data.description}</div>
+                      <div class="description">
+                        ${this._data.description.split('\n').map(
+                        (line) => html`${line}<br />`)}
+                      </div>
                     <br />`
                 : nothing}
             </div>
           </div>
-
+          <div class="field">
+            ${this._data.location
+              ? html`
+                  <ha-svg-icon .path=${mdiCompass}></ha-svg-icon>
+                  <div class="value" style="margin-bottom: 16px;">
+                    ${this._data.location}
+                    <div style="border-radius:6px;">
+                      <br />
+                      <iframe
+                        width="100%"
+                        height="200"
+                        src=${`https://maps.google.com/maps?width=100%&height=200&hl=en&q=${encodeURIComponent(this._data.location)}&ie=UTF8&t=&z=14&iwloc=B&output=embed`}
+                        frameborder="0"
+                        scrolling="no"
+                        marginheight="0"
+                        marginwidth="0"
+                        title="Map showing location: ${this._data.location}"
+                      >
+                        >
+                      </iframe>
+                      <br />
+                    </div>
+                  </div>
+                `
+              : ""}
+          </div>
+          <div class="field">
+            <ha-svg-icon .path=${mdiCalendarCheck}></ha-svg-icon>
+            <div class="value">
+              ${this._data?.attendees?.length
+                ? this._data.attendees.map(
+                    (attendee) => html`
+                      <div style="margin-bottom: 8px; display: flex; gap: 8px;">
+                        <div>${attendee.email}</div>
+                        <div>${attendee.response_status}</div>
+                      </div>
+                    `
+                  )
+                : "No attendees"}
+            </div>
+          </div>
           <div class="attribute">
             <state-info
               .hass=${this.hass}

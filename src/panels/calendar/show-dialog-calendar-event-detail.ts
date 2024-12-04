@@ -8,6 +8,7 @@ export interface CalendarEventDetailDialogParams {
   canEdit?: boolean;
   updated: () => void;
   color?: string;
+  attendees?: [any];
 }
 
 export const loadCalendarEventDetailDialog = () =>

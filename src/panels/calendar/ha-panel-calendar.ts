@@ -26,6 +26,7 @@ import { showConfigFlowDialog } from "../../dialogs/config-flow/show-dialog-conf
 import { haStyle } from "../../resources/styles";
 import type { CalendarViewChanged, HomeAssistant } from "../../types";
 import "./ha-full-calendar";
+import { showCalendarTemplateCreateDialog } from "./show-dialog-calendar-template-create";
 
 @customElement("ha-panel-calendar")
 class PanelCalendar extends LitElement {
@@ -162,7 +163,16 @@ class PanelCalendar extends LitElement {
           @click=${this._handleRefresh}
         ></ha-icon-button>
         ${showPane && this.hass.user?.is_admin
-          ? html`<mwc-list slot="pane" multi}>${calendarItems}</mwc-list>
+          ? html`
+              <mwc-list slot="pane" multi>${calendarItems}</mwc-list>
+              <ha-list-item
+                graphic="icon"
+                slot="pane-footer"
+                @click=${this._createTemplate}
+              >
+                <ha-svg-icon .path=${mdiPlus} slot="graphic"></ha-svg-icon>
+                Create template
+              </ha-list-item>
               <ha-list-item
                 graphic="icon"
                 slot="pane-footer"
@@ -170,7 +180,8 @@ class PanelCalendar extends LitElement {
               >
                 <ha-svg-icon .path=${mdiPlus} slot="graphic"></ha-svg-icon>
                 ${this.hass.localize("ui.components.calendar.create_calendar")}
-              </ha-list-item>`
+              </ha-list-item>
+            `
           : nothing}
         <ha-full-calendar
           .events=${this._events}
@@ -242,6 +253,16 @@ class PanelCalendar extends LitElement {
         if (flowFinished) {
           this._calendars = getCalendars(this.hass);
         }
+      },
+    });
+  }
+
+  private async _createTemplate(): Promise<void> {
+    showCalendarTemplateCreateDialog(this, {
+      events: this._events,
+      calendars: this._calendars,
+      updated: () => {
+        this._handleRefresh();
       },
     });
   }

@@ -31,6 +31,8 @@ export interface CalendarEventData {
   dtend: string;
   rrule?: string;
   description?: string;
+  attendees?: Attendee[];
+  location?: string;
 }
 
 export interface CalendarEventMutableParams {
@@ -39,6 +41,38 @@ export interface CalendarEventMutableParams {
   dtend: string;
   rrule?: string;
   description?: string;
+  attendees?: Attendee[];
+  location?: string;
+}
+
+export interface Attendee {
+  email: string;
+  id?: string;
+  response_status?: string;
+  name?: string;
+  comment?: string;
+  display_name?: string;
+  optional?: boolean;
+}
+
+export interface CalendarTemplateEvents {
+  template_events: CalendarEventMutableParams[];
+  template_name: string;
+  template_id: string;
+}
+
+export interface CalendarTemplateViewEventItem {
+  summary: string;
+  weekday_int: number;
+  start_time: string;
+  end_time: string;
+  description?: string;
+}
+
+export interface CalendarTemplateViewFullTemplate {
+  template_id: string;
+  template_name: string;
+  template_view_events: CalendarTemplateViewEventItem[];
 }
 
 // The scope of a delete/update for a recurring event
@@ -100,6 +134,8 @@ export const fetchCalendarEvents = async (
         dtend: eventEnd,
         recurrence_id: ev.recurrence_id,
         rrule: ev.rrule,
+        attendees: ev.attendees,
+        location: ev.location,
       };
       const event: CalendarEvent = {
         start: eventStart,
@@ -160,6 +196,17 @@ export const createCalendarEvent = (
     event: event,
   });
 
+export const applyCalendarTemplate = (
+  hass: HomeAssistant,
+  entityId: string,
+  calendar_template: CalendarTemplateEvents
+) =>
+  hass.callWS<void>({
+    type: "calendar/template/apply",
+    entity_id: entityId,
+    calendar_template: calendar_template,
+  });
+
 export const updateCalendarEvent = (
   hass: HomeAssistant,
   entityId: string,
@@ -191,3 +238,46 @@ export const deleteCalendarEvent = (
     recurrence_id,
     recurrence_range,
   });
+
+export const fetchCalendarTemplates = async (
+  hass: HomeAssistant,
+  calendars: Calendar[]
+): Promise<{
+  templates: CalendarTemplateViewFullTemplate[];
+  errors: string[];
+}> => {
+  const errors: string[] = [];
+  const promises: Promise<CalendarTemplateViewFullTemplate[]>[] = [];
+
+  calendars.forEach((cal) => {
+    promises.push(
+      hass.callApi<CalendarTemplateViewFullTemplate[]>(
+        "GET",
+        `calendars/${cal.entity_id}/templates`
+      )
+    );
+  });
+
+  const templateMap = new Map<string, CalendarTemplateViewFullTemplate>();
+
+  for (const [idx, promise] of promises.entries()) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      const result = await promise;
+
+      // Add templates to the map to filter duplicates
+      result.forEach((template) => {
+        if (!templateMap.has(template.template_id)) {
+          templateMap.set(template.template_id, template);
+        }
+      });
+    } catch (err) {
+      errors.push(calendars[idx].entity_id);
+    }
+  }
+
+  // Convert map values back to an array
+  const templateList = Array.from(templateMap.values());
+
+  return { templates: templateList, errors };
+};
