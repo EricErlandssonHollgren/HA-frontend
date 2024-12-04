@@ -26,9 +26,11 @@ class DialogCalendarTemplateApply extends LitElement {
 
   @state() private _params?: CalendarTemplateApplyDialogParams;
 
-  private _templateName?: string = "DefaultName";
+  @state() private _info?: string;
 
-  private _week?: number = 1;
+  private _templateName?: string = undefined;
+
+  private _week?: number = undefined;
 
   private _interval: number = 1;
 
@@ -42,6 +44,7 @@ class DialogCalendarTemplateApply extends LitElement {
     params: CalendarTemplateApplyDialogParams
   ): Promise<void> {
     this._params = params;
+    this._info = undefined;
   }
 
   private closeDialog(): void {
@@ -97,6 +100,14 @@ class DialogCalendarTemplateApply extends LitElement {
         .heading=${createCloseHeading(this.hass, "Enter template details")}
       >
         <div class="content">
+          ${this._info
+            ? html`<ha-alert
+                alert-type="error"
+                dismissable
+                @alert-dismissed-clicked=${this._clearInfo}
+                >${this._info}</ha-alert
+              >`
+            : ""}
           <ha-textfield
             class="template-name"
             label="Template Name"
@@ -145,6 +156,10 @@ class DialogCalendarTemplateApply extends LitElement {
     `;
   }
 
+  private _clearInfo() {
+    this._info = undefined;
+  }
+
   private _handleTemplateNameChanged(event: Event): void {
     this._templateName = (event.target as HTMLInputElement).value;
   }
@@ -167,20 +182,24 @@ class DialogCalendarTemplateApply extends LitElement {
   }
 
   private _submitTemplateDetails(): void {
-    const templateName = this._templateName ?? "Default Template Name";
-    const week = this._week ?? 40;
-    let rrule: string | undefined;
-    if (this._howOften !== "none") {
-      rrule =
-        "FREQ=" +
-        this._howOften.toUpperCase() +
-        ";COUNT=" +
-        this._endAfter +
-        ";INTERVAL=" +
-        this._interval;
+    if (this._templateName && this._week && this._selectedCalendars) {
+      const templateName = this._templateName ?? "Default Template Name";
+      const week = this._week ?? 40;
+      let rrule: string | undefined;
+      if (this._howOften !== "none") {
+        rrule =
+          "FREQ=" +
+          this._howOften.toUpperCase() +
+          ";COUNT=" +
+          this._endAfter +
+          ";INTERVAL=" +
+          this._interval;
+      }
+      this._params?.onSave(this._selectedCalendars, templateName, week, rrule);
+      location.reload();
+    } else {
+      this._info = "Please fill out all fields before submitting";
     }
-    this._params?.onSave(this._selectedCalendars, templateName, week, rrule);
-    location.reload();
   }
 
   static get styles(): CSSResultGroup {

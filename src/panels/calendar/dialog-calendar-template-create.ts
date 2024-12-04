@@ -334,7 +334,10 @@ export class DialogCalendarTemplateCreate extends LitElement {
           </div>
         </div>
         <div class="footer">
-          <button @click=${this._onOpenApplyModal(this._params?.calendars)}>
+          <button
+            ?disabled=${this._calendarEvents.length === 0}
+            @click=${this._onOpenApplyModal(this._params?.calendars)}
+          >
             SPECIFY TEMPLATE
           </button>
         </div>
@@ -518,6 +521,10 @@ export class DialogCalendarTemplateCreate extends LitElement {
         .footer button:hover {
           cursor: pointer;
           background-color: #0491d8;
+        }
+        .footer button:disabled {
+          cursor: auto;
+          background-color: rgba(26, 28, 30, 0.12);
         }
       `,
     ];
