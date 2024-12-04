@@ -1,6 +1,12 @@
 import { fireEvent } from "../../common/dom/fire_event";
 import type { CalendarEventData } from "../../data/calendar";
 
+/**
+ * This module shows the functionality to display details for an event.
+ * It also contains the parameters needed to be able to display required information.
+ * It uses fireEvent to load the component and thus show the correct information.
+ */
+
 export interface CalendarEventDetailDialogParams {
   calendarId: string;
   entry: CalendarEventData;

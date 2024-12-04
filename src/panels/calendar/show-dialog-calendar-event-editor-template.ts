@@ -2,7 +2,6 @@ import { fireEvent } from "../../common/dom/fire_event";
 import type { CalendarTemplateViewEventItem } from "../../data/calendar";
 
 export interface CalendarEventEditTemplateDialogParams {
-  //   calendarId?: string;
   selectedDate?: Date; // When provided is used as the pre-filled date for the event creation dialog
   entry?: CalendarTemplateViewEventItem;
   canDelete?: boolean;
