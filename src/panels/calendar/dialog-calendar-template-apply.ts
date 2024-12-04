@@ -32,6 +32,8 @@ class DialogCalendarTemplateApply extends LitElement {
 
   private _week?: number = undefined;
 
+  private _year?: number = undefined;
+
   private _interval: number = 1;
 
   private _howOften: string = "";
@@ -119,6 +121,11 @@ class DialogCalendarTemplateApply extends LitElement {
             label="Week"
             @input=${this._handleWeekChanged}
           ></ha-textfield>
+          <ha-textfield
+            class="year"
+            label="Year"
+            @input=${this._handleYearChanged}
+          ></ha-textfield>
           <ha-select
             class="how-often"
             label="How often?"
@@ -168,6 +175,10 @@ class DialogCalendarTemplateApply extends LitElement {
     this._week = Number((event.target as HTMLInputElement).value);
   }
 
+  private _handleYearChanged(event: Event): void {
+    this._year = Number((event.target as HTMLInputElement).value);
+  }
+
   private _handleTemplateIntervalChanged(event: Event): void {
     this._interval = Number((event.target as HTMLInputElement).value);
   }
@@ -185,6 +196,7 @@ class DialogCalendarTemplateApply extends LitElement {
     if (this._templateName && this._week && this._selectedCalendars) {
       const templateName = this._templateName ?? "Default Template Name";
       const week = this._week ?? 40;
+      const year = this._year ?? 2024;
       let rrule: string | undefined;
       if (this._howOften !== "none") {
         rrule =
@@ -195,7 +207,13 @@ class DialogCalendarTemplateApply extends LitElement {
           ";INTERVAL=" +
           this._interval;
       }
-      this._params?.onSave(this._selectedCalendars, templateName, week, rrule);
+      this._params?.onSave(
+        this._selectedCalendars,
+        templateName,
+        week,
+        year,
+        rrule
+      );
       location.reload();
     } else {
       this._info = "Please fill out all fields before submitting";

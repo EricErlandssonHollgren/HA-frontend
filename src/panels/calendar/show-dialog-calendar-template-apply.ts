@@ -7,6 +7,7 @@ export interface CalendarTemplateApplyDialogParams {
     selectedCalendars: string[],
     templateName: string,
     week: number,
+    year: number,
     rrule?: string
   ) => void;
 }

@@ -95,12 +95,14 @@ export class DialogCalendarTemplateCreate extends LitElement {
         selectedCalendars: string[],
         templateName: string,
         week: number,
+        year: number,
         rrule?: string
       ) => {
         this._applyCalendarTemplate(
           selectedCalendars,
           templateName,
           week,
+          year,
           rrule
         );
       },
@@ -112,6 +114,7 @@ export class DialogCalendarTemplateCreate extends LitElement {
     selectedCalendars: string[],
     templateName: string,
     week: number,
+    year: number,
     rrule?: string
   ): void {
     // Update the internal state
@@ -128,7 +131,7 @@ export class DialogCalendarTemplateCreate extends LitElement {
       }
 
       // Start of the year
-      const startOfYear = new Date(Date.UTC(2024, 0, 1));
+      const startOfYear = new Date(Date.UTC(year, 0, 1));
 
       // Get ISO day of the week for January 1st (0 = Sunday, 6 = Saturday)
       const startDayOfWeek = startOfYear.getUTCDay();
