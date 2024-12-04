@@ -121,12 +121,14 @@ export class DialogCalendarTemplateCreate extends LitElement {
         selectedCalendars: string[],
         templateName: string,
         week: number,
+        year: number,
         rrule?: string
       ) => {
         this._applyCalendarTemplate(
           selectedCalendars,
           templateName,
           week,
+          year,
           rrule
         );
       },
@@ -145,6 +147,7 @@ export class DialogCalendarTemplateCreate extends LitElement {
     selectedCalendars: string[],
     templateName: string,
     week: number,
+    year: number,
     rrule?: string
   ): void {
     // Update the internal state
@@ -161,7 +164,7 @@ export class DialogCalendarTemplateCreate extends LitElement {
       }
 
       // Start of the year
-      const startOfYear = new Date(Date.UTC(2024, 0, 1));
+      const startOfYear = new Date(Date.UTC(year, 0, 1));
 
       // Get ISO day of the week for January 1st (0 = Sunday, 6 = Saturday)
       const startDayOfWeek = startOfYear.getUTCDay();
@@ -372,7 +375,10 @@ export class DialogCalendarTemplateCreate extends LitElement {
           </div>
         </div>
         <div class="footer">
-          <button @click=${this._onOpenApplyModal(this._params?.calendars)}>
+          <button
+            ?disabled=${this._calendarEvents.length === 0}
+            @click=${this._onOpenApplyModal(this._params?.calendars)}
+          >
             SPECIFY TEMPLATE
           </button>
         </div>
@@ -556,6 +562,10 @@ export class DialogCalendarTemplateCreate extends LitElement {
         .footer button:hover {
           cursor: pointer;
           background-color: #0491d8;
+        }
+        .footer button:disabled {
+          cursor: auto;
+          background-color: rgba(26, 28, 30, 0.12);
         }
       `,
     ];

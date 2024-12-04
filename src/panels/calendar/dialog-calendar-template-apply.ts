@@ -29,10 +29,15 @@ class DialogCalendarTemplateApply extends LitElement {
 
   @state() private _params?: CalendarTemplateApplyDialogParams;
 
-  private _templateName?: string = "DefaultName";
+  @state() private _info?: string;
 
-  /** The week on which to start applying the template. Default value week 1 */
-  private _week?: number = 1;
+  private _templateName?: string = undefined;
+
+  /** The week on which to start applying the template */
+  private _week?: number = undefined;
+
+  /** The year on which to start applying the template. */
+  private _year?: number = undefined;
 
   /** How often the template will be applied (1 = every week/month/year, 2 = every other week/month/year) */
   private _interval: number = 1;
@@ -50,6 +55,7 @@ class DialogCalendarTemplateApply extends LitElement {
     params: CalendarTemplateApplyDialogParams
   ): Promise<void> {
     this._params = params;
+    this._info = undefined;
   }
 
   private closeDialog(): void {
@@ -112,6 +118,14 @@ class DialogCalendarTemplateApply extends LitElement {
         .heading=${createCloseHeading(this.hass, "Enter template details")}
       >
         <div class="content">
+          ${this._info
+            ? html`<ha-alert
+                alert-type="error"
+                dismissable
+                @alert-dismissed-clicked=${this._clearInfo}
+                >${this._info}</ha-alert
+              >`
+            : ""}
           <ha-textfield
             class="template-name"
             label="Template Name"
@@ -123,6 +137,11 @@ class DialogCalendarTemplateApply extends LitElement {
             label="Week"
             @input=${this._handleWeekChanged}
           ></ha-textfield>
+          <ha-textfield
+            class="year"
+            label="Year"
+            @input=${this._handleYearChanged}
+          ></ha-textfield>
           <ha-select
             class="how-often"
             label="How often?"
@@ -131,10 +150,9 @@ class DialogCalendarTemplateApply extends LitElement {
             .value=${"none"}
           >
             <mwc-list-item value="none">None</mwc-list-item>
-            <mwc-list-item value="daily">Daily</mwc-list-item>
-            <mwc-list-item value="weekly">Weekly</mwc-list-item>
-            <mwc-list-item value="monthly">Monthly</mwc-list-item>
-            <mwc-list-item value="yearly">Yearly</mwc-list-item>
+            <mwc-list-item value="weekly">Every week</mwc-list-item>
+            <mwc-list-item value="monthly">Once a month</mwc-list-item>
+            <mwc-list-item value="yearly">Once a year</mwc-list-item>
           </ha-select>
           <ha-textfield
             class="template-interval"
@@ -161,12 +179,20 @@ class DialogCalendarTemplateApply extends LitElement {
     `;
   }
 
+  private _clearInfo() {
+    this._info = undefined;
+  }
+
   private _handleTemplateNameChanged(event: Event): void {
     this._templateName = (event.target as HTMLInputElement).value;
   }
 
   private _handleWeekChanged(event: Event): void {
     this._week = Number((event.target as HTMLInputElement).value);
+  }
+
+  private _handleYearChanged(event: Event): void {
+    this._year = Number((event.target as HTMLInputElement).value);
   }
 
   private _handleTemplateIntervalChanged(event: Event): void {
@@ -186,20 +212,31 @@ class DialogCalendarTemplateApply extends LitElement {
    * Converts the input to a valid recurrence rule and calls the onSave function. Reloads the page.
    */
   private _submitTemplateDetails(): void {
-    const templateName = this._templateName ?? "Default Template Name";
-    const week = this._week ?? 40;
-    let rrule: string | undefined;
-    if (this._howOften !== "none") {
-      rrule =
-        "FREQ=" +
-        this._howOften.toUpperCase() +
-        ";COUNT=" +
-        this._endAfter +
-        ";INTERVAL=" +
-        this._interval;
+    if (this._templateName && this._week && this._selectedCalendars) {
+      const templateName = this._templateName ?? "Default Template Name";
+      const week = this._week ?? 40;
+      const year = this._year ?? 2024;
+      let rrule: string | undefined;
+      if (this._howOften !== "none") {
+        rrule =
+          "FREQ=" +
+          this._howOften.toUpperCase() +
+          ";COUNT=" +
+          this._endAfter +
+          ";INTERVAL=" +
+          this._interval;
+      }
+      this._params?.onSave(
+        this._selectedCalendars,
+        templateName,
+        week,
+        year,
+        rrule
+      );
+      location.reload();
+    } else {
+      this._info = "Please fill out all fields before submitting";
     }
-    this._params?.onSave(this._selectedCalendars, templateName, week, rrule);
-    location.reload();
   }
 
   static get styles(): CSSResultGroup {
@@ -220,15 +257,18 @@ class DialogCalendarTemplateApply extends LitElement {
           margin-bottom: 16px;
         }
         ha-textfield,
-        ha-textarea {
+        ha-textarea,
+        ha-select {
+          margin-bottom: 26px;
           display: block;
         }
-        ha-textarea {
+        /* ha-textarea {
           margin-bottom: 16px;
-        }
+        } */
         ha-formfield {
           display: block;
           padding: 16px 0;
+          margin-bottom: 16px;
         }
         ha-date-input {
           flex-grow: 1;
@@ -240,7 +280,7 @@ class DialogCalendarTemplateApply extends LitElement {
         }
         ha-recurrence-rule-editor {
           display: block;
-          margin-top: 16px;
+          margin-bottom: 16px;
         }
         .flex {
           display: flex;
