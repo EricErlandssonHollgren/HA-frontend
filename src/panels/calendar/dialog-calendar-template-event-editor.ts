@@ -26,8 +26,6 @@ class DialogCalendarTemplateEventEditor extends LitElement {
 
   @state() private _calendarEvents: CalendarTemplateViewEventItem[] = [];
 
-  @state() private _error?: string;
-
   @state() private _info?: string;
 
   @state() private _params?: CalendarEventEditTemplateDialogParams;
@@ -49,7 +47,6 @@ class DialogCalendarTemplateEventEditor extends LitElement {
   public async showDialog(
     params: CalendarEventEditTemplateDialogParams
   ): Promise<void> {
-    this._error = undefined;
     this._info = undefined;
     this._params = params;
     if (params.entry) {
@@ -62,7 +59,7 @@ class DialogCalendarTemplateEventEditor extends LitElement {
       this._summary = "";
       this._description = "";
       this._dtstart = "00:00:00";
-      this._dtend = "00:00:00";
+      this._dtend = "01:00:00";
     }
 
     this._timeZone = resolveTimeZone(
@@ -96,6 +93,14 @@ class DialogCalendarTemplateEventEditor extends LitElement {
         )}
       >
         <div id="content">
+          ${this._info
+            ? html`<ha-alert
+                alert-type="error"
+                dismissable
+                @alert-dismissed-clicked=${this._clearInfo}
+                >${this._info}</ha-alert
+              >`
+            : ""}
           <ha-textfield
             class="summary"
             name="summary"
@@ -180,6 +185,10 @@ class DialogCalendarTemplateEventEditor extends LitElement {
     `;
   }
 
+  private _clearInfo() {
+    this._info = undefined;
+  }
+
   private _deleteEvent() {
     const i = this._params?.index;
     if (i !== undefined && i >= 0 && i < this._calendarEvents.length) {
@@ -200,7 +209,12 @@ class DialogCalendarTemplateEventEditor extends LitElement {
 
   private _saveEvent(isCreate: boolean): void {
     // Validate required fields
-    if (this._summary && this._dtstart && this._dtend) {
+    if (
+      this._summary &&
+      this._dtend &&
+      this._dtstart &&
+      !(this._dtend! <= this._dtstart!)
+    ) {
       // Add the new event to the calendar
       const newEvent: CalendarTemplateViewEventItem = {
         summary: this._summary,
@@ -228,9 +242,8 @@ class DialogCalendarTemplateEventEditor extends LitElement {
       }
       this.closeDialog();
     } else {
-      alert(
-        "Please fill in the required fields (Summary, Start Time, and End Time)."
-      );
+      this._info =
+        "Please fill in the required fields and make sure that the start time of the event is before the end time.";
     }
   }
 
@@ -269,11 +282,23 @@ class DialogCalendarTemplateEventEditor extends LitElement {
   }
 
   private _startTimeChanged(ev: CustomEvent) {
+    this._clearInfo();
     this._dtstart = ev.detail.value;
+    // Prevent that the end time can be before the start time. Try to keep the
+    // duration the same.
+    if (this._dtend! <= this._dtstart!) {
+      this._info = "The start time needs to be before the end time.";
+    }
   }
 
   private _endTimeChanged(ev: CustomEvent) {
+    this._clearInfo();
     this._dtend = ev.detail.value;
+    // Prevent that the end time can be before the start time. Try to keep the
+    // duration the same.
+    if (this._dtend! <= this._dtstart!) {
+      this._info = "The start time needs to be before the end time.";
+    }
   }
 
   private async _handleViewChanged(

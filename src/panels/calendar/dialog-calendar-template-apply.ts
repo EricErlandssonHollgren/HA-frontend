@@ -116,10 +116,9 @@ class DialogCalendarTemplateApply extends LitElement {
             .value=${"none"}
           >
             <mwc-list-item value="none">None</mwc-list-item>
-            <mwc-list-item value="daily">Daily</mwc-list-item>
-            <mwc-list-item value="weekly">Weekly</mwc-list-item>
-            <mwc-list-item value="monthly">Monthly</mwc-list-item>
-            <mwc-list-item value="yearly">Yearly</mwc-list-item>
+            <mwc-list-item value="weekly">Every week</mwc-list-item>
+            <mwc-list-item value="monthly">Once a month</mwc-list-item>
+            <mwc-list-item value="yearly">Once a year</mwc-list-item>
           </ha-select>
           <ha-textfield
             class="template-interval"
@@ -202,15 +201,18 @@ class DialogCalendarTemplateApply extends LitElement {
           margin-bottom: 16px;
         }
         ha-textfield,
-        ha-textarea {
+        ha-textarea,
+        ha-select {
+          margin-bottom: 26px;
           display: block;
         }
-        ha-textarea {
+        /* ha-textarea {
           margin-bottom: 16px;
-        }
+        } */
         ha-formfield {
           display: block;
           padding: 16px 0;
+          margin-bottom: 16px;
         }
         ha-date-input {
           flex-grow: 1;
@@ -222,7 +224,7 @@ class DialogCalendarTemplateApply extends LitElement {
         }
         ha-recurrence-rule-editor {
           display: block;
-          margin-top: 16px;
+          margin-bottom: 16px;
         }
         .flex {
           display: flex;
