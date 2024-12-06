@@ -36,6 +36,24 @@ To use the new features implemented in the Google Calendar integration, Google C
 
 The purpose of the template feature is for the user to be able to create a collection of calendar events that belong together and that are saved for future use. Examples are if you have specific workout schedules that belogn to different seasons or have rare plants with unique watering schedules.
 
+#### Edit
+
+The purpose of the event feature is for users to be able to edit their existing events.
+Instead of deleting and recreating a faulty event,
+the user can now directly edit existing events.
+
+#### Invite
+
+The purpose of the invite feature is for the user to be able to invite other people to their events.
+An email with the invitation will be sent to the attendees mail. There is support for the attendees to see which
+attendees have accepted the invitation. However, each user needs to contact Google to get the permissions for this.
+
+#### Location
+
+The purpose of this feature is for the user to be able to add a location of the event.
+In the event, a map will appear that shows the location. The user will be able to click on the map and
+be taken to Google Maps.
+
 ### Usage
 
 #### Template feature
