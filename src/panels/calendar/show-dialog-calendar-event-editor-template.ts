@@ -11,7 +11,6 @@ export interface CalendarEventEditTemplateDialogParams {
 }
 
 export const loadCalendarEventEditTemplateDialog = () =>
-  // console.log("Loading dialog-calendar-template-event...");
   import("./dialog-calendar-template-event-editor");
 
 export const showCalendarEventEditTemplateDialog = (

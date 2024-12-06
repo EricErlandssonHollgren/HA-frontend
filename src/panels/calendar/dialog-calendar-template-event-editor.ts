@@ -1,5 +1,5 @@
 import "@material/mwc-button";
-import type { CSSResultGroup } from "lit";
+import type { CSSResultGroup, TemplateResult } from "lit";
 import { LitElement, css, html, nothing } from "lit";
 import { property, state } from "lit/decorators";
 import { fireEvent } from "../../common/dom/fire_event";
@@ -11,7 +11,6 @@ import { createCloseHeading } from "../../components/ha-dialog";
 import { haStyleDialog } from "../../resources/styles";
 import type { HomeAssistant } from "../../types";
 import "../lovelace/components/hui-generic-entity-row";
-// import { createCloseHeading } from "../../components/ha-dialog";
 import type { CalendarEventEditTemplateDialogParams } from "./show-dialog-calendar-event-editor-template";
 import "./dialog-calendar-template-create";
 import "../../components/ha-formfield";
@@ -62,6 +61,16 @@ class DialogCalendarTemplateEventEditor extends LitElement {
   private closeDialog(): void {
     this._params = undefined;
     fireEvent(this, "dialog-closed", { dialog: this.localName });
+  }
+
+  private _renderDeleteButton(isCreate: boolean): TemplateResult | string {
+    return this._params?.canDelete && !isCreate
+      ? html`
+          <button class="delete-button" @click=${this._deleteEvent}>
+            DELETE EVENT
+          </button>
+        `
+      : "";
   }
 
   /**
@@ -164,16 +173,7 @@ class DialogCalendarTemplateEventEditor extends LitElement {
                   >
                     SAVE EVENT
                   </button>
-                  ${this._params.canDelete
-                    ? html`
-                        <button
-                          class="delete-button"
-                          @click=${this._deleteEvent}
-                        >
-                          DELETE EVENT
-                        </button>
-                      `
-                    : ""}
+                  ${this._renderDeleteButton(isCreate)}
                 `}
           </div>
         </div>
@@ -219,7 +219,7 @@ class DialogCalendarTemplateEventEditor extends LitElement {
       this._summary &&
       this._dtend &&
       this._dtstart &&
-      !(this._dtend! <= this._dtstart!)
+      this._dtend! >= this._dtstart!
     ) {
       // Add the new event to the calendar
       const newEvent: CalendarTemplateViewEventItem = {
