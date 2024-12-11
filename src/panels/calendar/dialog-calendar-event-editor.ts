@@ -27,7 +27,11 @@ import "../../components/ha-switch";
 import "../../components/ha-textarea";
 import "../../components/ha-textfield";
 import "../../components/ha-time-input";
-import type { Attendee, CalendarEventMutableParams } from "../../data/calendar";
+import type {
+  Attendee,
+  CalendarEventData,
+  CalendarEventMutableParams,
+} from "../../data/calendar";
 import {
   CalendarEntityFeature,
   RecurrenceRange,
@@ -63,6 +67,8 @@ class DialogCalendarEventEditor extends LitElement {
   @state() private _description? = "";
 
   @state() private _location? = "";
+
+  @state() private _meeting? = "";
 
   @state() private _rrule?: string;
 
@@ -105,10 +111,12 @@ class DialogCalendarEventEditor extends LitElement {
       const entry = params.entry!;
       this._allDay = isDate(entry.dtstart);
       this._summary = entry.summary;
-      this._description = entry.description;
+      this._meeting = this._parseMeetingLink(entry);
+      this._description = this._parseDescription(entry);
       this._attendees = entry.attendees;
       this._rrule = entry.rrule;
-      this._location = entry.location;
+      this._location = entry.location || "";
+
       if (this._allDay) {
         this._dtstart = new Date(entry.dtstart + "T00:00:00");
         // Calendar event end dates are exclusive, but not shown that way in the UI. The
@@ -145,6 +153,7 @@ class DialogCalendarEventEditor extends LitElement {
     this._description = "";
     this._attendees = [];
     this._location = "";
+    this._meeting = "";
     this._rrule = undefined;
     fireEvent(this, "dialog-closed", { dialog: this.localName });
   }
@@ -215,6 +224,13 @@ class DialogCalendarEventEditor extends LitElement {
             .label=${"Location"}
             .value=${this._location}
             @input=${this._handleLocationChanged}
+          ></ha-textfield>
+          <ha-textfield
+            class="meeting"
+            name="meeting"
+            .label=${"Meeting"}
+            .value=${this._meeting}
+            @input=${this._handleMeetingChanged}
           ></ha-textfield>
           <div class="attendees">
             ${this._attendees?.length ? html`<span>Attendees</span>` : ""}
@@ -432,8 +448,39 @@ class DialogCalendarEventEditor extends LitElement {
     this._summary = ev.target.value;
   }
 
+  private _parseDescription(entry: CalendarEventData) {
+    const prefix = "meeting: ";
+    // Split the description into lines
+    const lines = entry.description?.split("\n");
+
+    // Filter out the line that contains the prefix
+    const filteredLines = lines?.filter((line) => !line.includes(prefix));
+
+    // Rejoin the remaining lines
+    return filteredLines?.join("\n").trim();
+  }
+
+  private _parseMeetingLink(entry: CalendarEventData): string | undefined {
+    const meetingPrefix = "meeting: ";
+    const index = entry.description?.indexOf(meetingPrefix);
+
+    if (index === -1 || index === undefined) return undefined;
+
+    const remainingText = entry.description?.slice(
+      index + meetingPrefix.length
+    );
+
+    if (remainingText === undefined) return undefined;
+
+    return remainingText.split("\n")[0].trim();
+  }
+
   private _handleLocationChanged(ev) {
     this._location = ev.target.value;
+  }
+
+  private _handleMeetingChanged(ev) {
+    this._meeting = ev.target.value;
   }
 
   private _handleDescriptionChanged(ev) {
@@ -512,10 +559,14 @@ class DialogCalendarEventEditor extends LitElement {
   }
 
   private _calculateData() {
+    if (this._meeting !== "" || this._meeting?.length !== 0) {
+      this._description += "\n";
+      this._description += `meeting: ${this._meeting}`;
+    }
     const data: CalendarEventMutableParams = {
       summary: this._summary,
-      description: this._description,
-      location: this._location,
+      description: this._description?.trim(),
+      location: this._location || "",
       attendees: this._attendees,
       rrule: this._rrule || undefined,
       dtstart: "",
