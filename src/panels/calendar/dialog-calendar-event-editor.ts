@@ -449,7 +449,7 @@ class DialogCalendarEventEditor extends LitElement {
   }
 
   private _parseDescription(entry: CalendarEventData) {
-    const prefix = "meeting: ";
+    const prefix = "Meeting: ";
     // Split the description into lines
     const lines = entry.description?.split("\n");
 
@@ -461,7 +461,7 @@ class DialogCalendarEventEditor extends LitElement {
   }
 
   private _parseMeetingLink(entry: CalendarEventData): string | undefined {
-    const meetingPrefix = "meeting: ";
+    const meetingPrefix = "Meeting: ";
     const index = entry.description?.indexOf(meetingPrefix);
 
     if (index === -1 || index === undefined) return undefined;
@@ -559,9 +559,8 @@ class DialogCalendarEventEditor extends LitElement {
   }
 
   private _calculateData() {
-    if (this._meeting !== "" || this._meeting?.length !== 0) {
-      this._description += "\n";
-      this._description += `meeting: ${this._meeting}`;
+    if (this._meeting && this._meeting.length !== 0) {
+      this._description = `Meeting: ${this._meeting}\n\n${this._description}`;
     }
     const data: CalendarEventMutableParams = {
       summary: this._summary,
